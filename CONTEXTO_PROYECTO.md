@@ -1,173 +1,204 @@
-# 📌 CONTEXTO VIVO DEL PROYECTO: S3A (Sistema de Asistencia Digital "Amigo Académico")
+# 📌 ESPECIFICACIÓN Y CONTEXTO VIVO DEL PROYECTO: S3A
+### Sistema de Asistencia Digital "Amigo Académico"
 
 > [!IMPORTANT]
-> ### ⚠️ INSTRUCCIÓN OBLIGATORIA PARA AGENTES Y MODELOS DE IA
-> **ESTE DOCUMENTO ES LA MEMORIA CENTRAL Y FUENTE ÚNICA DE VERDAD DEL PROYECTO.**
-> Todo asistente, agente o modelo de IA que trabaje en este repositorio **DEBE LEER ESTE ARCHIVO AL INICIAR** y **DEBE ACTUALIZARLO OBLIGATORIAMENTE AL FINALIZAR CUALQUIER CAMBIO O INTERVENCIÓN**.
-> 
-> **Cada actualización debe reflejar:**
-> 1. Nuevo estado de los módulos y componentes desarrollados.
-> 2. Nuevos endpoints creados, rutas y migraciones de base de datos.
-> 3. Tareas completadas vs. tareas pendientes.
-> 4. Decisiones de diseño, convenciones técnicas o dependencias añadidas.
-> 5. Próximo paso exacto para que el siguiente modelo o desarrollador continúe sin perder contexto.
+> ### ⚠️ MEMORIA CENTRAL Y FUENTE ÚNICA DE VERDAD DEL PROYECTO
+> Este documento define la arquitectura, flujos operativos, modelo de datos y estado de implementación del sistema **S3A**. 
+> Todo cambio en requerimientos o avance técnico debe reflejarse obligatoriamente aquí antes de proceder con modificaciones mayores de código.
 
 ---
 
 ## 1. Visión y Propósito del Proyecto
 
-**S3A** es una plataforma web para modernizar, digitalizar y auditar el control de asistencias a las tutorías y asesorías del programa universitario **Amigo Académico**.
-Sustituye las listas físicas en papel por un flujo digital apoyado en **firma electrónica manuscrita capturada en pantalla (Signature Pad)**, códigos únicos/QR de sesión y almacenamiento seguro en la nube.
+**S3A** es una plataforma web para digitalizar, controlar y auditar la asistencia de estudiantes a las tutorías y asesorías universitarias del programa **Amigo Académico**.
 
-### Flujo Operativo Central:
-1. **Jornada de Trabajo**: El tutor (*Amigo Académico*) inicia sesión y "Abre Jornada" al comenzar su turno de beca.
-2. **Sesión de Asesoría**: Dentro de una jornada activa, el tutor crea una o varias sesiones especificando materia (del catálogo oficial precargado) y tema abordado. Se define si es `individual` o `grupal`.
-3. **Código / QR de Sesión**: El sistema genera un identificador corto y su respectivo código QR.
-4. **Firma Digital**:
-   - **Modo Autónomo**: El estudiante escanea el QR o entra el código desde su celular (sin requerir cuenta ni login), visualiza los datos de la sesión, escribe su nombre (en sesiones grupales) o confirma el precargado (en sesiones individuales) y plasma su firma gráfica.
-   - **Modo Asistido**: Si el estudiante no dispone de celular o conectividad, el Amigo Académico activa la pantalla de firma en su propio equipo para que el estudiante firme allí mismo.
-5. **Cierre de Jornada**: Al concluir el turno, el tutor cierra la jornada. En ese instante, todos los códigos y accesos a firmas de esa jornada quedan **automáticamente invalidados/expirados**.
-6. **Auditoría y Reportes**: Directores y Super Admins pueden filtrar asistencias con múltiples criterios y exportar consolidados a Excel (`.xlsx`).
+Sustituye por completo las planillas de papel por un flujo dinámico apoyado en un **único código QR de sala** y **firma digital manuscrita en pantalla (Signature Pad)** desde el celular del estudiante.
 
 ---
 
-## 2. Pila Tecnológica (Stack) y Arquitectura
+## 2. Roles del Sistema y Reglas de Cuentas
 
-| Capa | Tecnología | Rol / Justificación |
+> **NO existe registro público (sign-up)** de ningún tipo. Todas las cuentas son aprovisionadas por autoridades académicas.
+
+| Rol | ¿Cómo obtiene su cuenta? | Responsabilidades Principales |
 |---|---|---|
-| **Backend Framework** | **Cloudflare Workers + Hono (TypeScript)** | Serverless ultrarrápido, edge computing, API REST minimalista y modular. |
-| **Base de Datos** | **Cloudflare D1 (SQLite en Edge)** | Datos relacionales (usuarios, materias, jornadas, sesiones, asistencias). |
-| **Almacenamiento de Archivos** | **Cloudflare R2 (S3-compatible Object Storage)** | Almacenamiento binario de las imágenes de las firmas digitales (`.png`/`.webp`). |
-| **Autenticación** | **JWT (JSON Web Tokens)** | Claims de roles (`SUPER_ADMIN`, `DIRECTOR`, `AMIGO_ACADEMICO`). Los estudiantes NO tienen login. |
-| **Frontend** | **React / Vite + TypeScript + Tailwind CSS** *(planificado)* | SPA ágil, mobile-first para la interfaz de firma del estudiante y panel administrativo responsivo. |
-| **Librería de Firma** | **`signature_pad`** *(HTML5 Canvas)* | Captura táctil suave y vectorizada de la firma del estudiante. |
-| **Exportación** | **SheetJS (`xlsx`)** | Generación de reportes de auditoría en formato Excel. |
+| **SUPER_ADMIN** | Creado por base de datos / semilla inicial. | Gestión de Directores, configuración global del sistema y catálogo maestro. |
+| **DIRECTOR** | Creado por un Super Admin. | **Crea y administra las cuentas de los Amigos Académicos** y el **catálogo de materias**. Consulta de asistencias, auditoría visual de firmas y exportación a Excel (`.xlsx`). |
+| **AMIGO_ACADEMICO** | **Creado exclusivamente por un Director** (no hay autoregistro). | Inicia sesión, visualiza/activa la **sesión compartida de asesoría**, proyecta el **QR único de sala**, visualiza las asistencias en vivo y cierra la sesión al finalizar el turno. |
+| **ESTUDIANTE** | **Sin cuenta ni credenciales**. | Escanea el QR proyectado, busca su materia en el formulario interactivo, ingresa motivo, nombre, código y plasma su firma digital. |
 
 ---
 
-## 3. Estado Actual de la Base de Código (Snapshot Actual)
+## 3. Dinámica de Sala: Sesión Única Compartida
 
-### 3.1 Estructura en el Repositorio
-```text
-/home/ing-mapache/Proyectos/S3A/
-├── README.md                     <- Descripción básica del proyecto
-├── CONTEXTO_PROYECTO.md          <- [ESTE DOCUMENTO] Memoria viva del proyecto
-└── backend/
-    ├── package.json              <- Hono v4.13.11, wrangler v4.143.1, typescript v7.0.2
-    ├── tsconfig.json             <- Configuración TypeScript ESNext / NodeNext
-    ├── wrangler.jsonc            <- Configuración de Cloudflare Workers
-    ├── AGENTS.md                 <- Documentación técnica Cloudflare Workers
-    └── src/
-        ├── index.ts              <- Servidor Hono con CORS y montaje de rutas (/materias, /usuarios)
-        ├── db/
-            └── schema.sql        <- Tablas 'materias' y 'usuarios' con datos semilla (Parcial)
-        ├── middlewares/
-            └── auth.ts           <- authMiddleware y requireRole con fallback de tokens mock y headers
-        ├── routes/
-            ├── materias.ts       <- CRUD completo implementado (GET, POST, PUT, DELETE)
-            ├── usuarios.ts       <- CRUD completo implementado protegido con SUPER_ADMIN
-            ├── auth.ts           <- Archivo creado, PENDIENTE de implementación
-            ├── jornadas.ts       <- Archivo creado, PENDIENTE de implementación
-            ├── sesiones.ts       <- Archivo creado, PENDIENTE de implementación
-            ├── firmas.ts         <- Archivo creado, PENDIENTE de implementación
-            └── reportes.ts       <- Archivo creado, PENDIENTE de implementación
-        ├── services/
-            ├── materiaService.ts <- Lógica con soporte dual (D1 Database + fallback memoria)
-            ├── usuarioService.ts <- Lógica con soporte dual (D1 Database + fallback memoria)
-            ├── jornadaService.ts <- Archivo creado, PENDIENTE de implementación
-            ├── sesionService.ts  <- Archivo creado, PENDIENTE de implementación
-            └── firmaService.ts   <- Archivo creado, PENDIENTE de implementación
-        └── types/
-            └── index.ts          <- Tipos base (Role, Materia, Usuario, AuthUserPayload, Variables)
+### 3.1 Principio Operativo
+- En el espacio o sala de asesorías puede haber **uno o varios Amigos Académicos en turno simultáneamente**.
+- **No se crea una sesión por cada tutor**: Existe **1 sola sesión activa compartida** para la sala.
+- **No se asocia el estudiante a un Amigo Académico específico**: Lo relevante para la institución es la constancia de asistencia del estudiante a la asesoría (materia, motivo, fecha/hora y firma).
+- Si un Amigo Académico ya abrió la sesión:
+  - Cualquier otro Amigo Académico que ingrese al sistema verá que ya hay una sesión activa en curso.
+  - Ambos tienen en pantalla el **mismo código QR**, el mismo código corto y la **misma lista en vivo** de alumnos que van firmando.
+- Cuando culmina el horario de atención, cualquiera de los Amigos Académicos en turno puede **dar por finalizada la sesión**, lo cual desactiva el QR para todos.
+
+---
+
+## 4. Flujo Operativo Integral (Paso a Paso)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Director as Director de Programa
+    actor Tutor1 as Amigo Académico 1
+    actor Tutor2 as Amigo Académico 2
+    actor Estudiante as Estudiante
+    participant Web as Portal Web S3A
+    participant API as Backend (Cloudflare Workers)
+    participant D1 as Base de Datos (Cloudflare D1)
+    participant R2 as Firmas (Cloudflare R2)
+
+    Note over Director, D1: 1. Aprovisionamiento de Cuentas
+    Director->>Web: Inicia sesión y va a "Gestión de Amigos Académicos"
+    Director->>API: POST /usuarios (crea tutor con correo y contraseña temporal)
+    API->>D1: Guarda nuevo Amigo Académico (sin autoregistro)
+
+    Note over Tutor1, Tutor2: 2. Apertura y Conexión a la Sesión Compartida
+    Tutor1->>Web: Inicia sesión en su equipo
+    Tutor1->>Web: Abre la sesión activa de la sala (o crea si no hay ninguna abierta)
+    Web->>API: POST /sesiones/abrir-compartida
+    API->>D1: Registra o recupera la sesión activa actual con su CÓDIGO ÚNICO
+    Web-->>Tutor1: Muestra el QR único y lista de estudiantes vacía
+    
+    Tutor2->>Web: Llega más tarde e inicia sesión en su propio equipo
+    Web->>API: GET /sesiones/activa
+    API-->>Web: Retorna la MISMA sesión activa que ya abrió Tutor1
+    Web-->>Tutor2: Muestra el MISMO código QR y la misma lista compartida en vivo
+
+    Note over Estudiante, Web: 3. Escaneo y Formulario Dinámico
+    Estudiante->>Web: Escanea el QR con su celular (abre /firmar/:codigo)
+    Web->>API: GET /sesiones/verificar/:codigo (valida que esté activa)
+    Estudiante->>Web: Escribe en el buscador dinámico de materias y selecciona una
+    Web-->>Estudiante: Despliega campos requeridos:
+    Estudiante->>Web: Digita Motivo de la asesoría (duda, parcial, taller...)
+    Estudiante->>Web: Digita Nombre Completo
+    Estudiante->>Web: Digita Código Estudiantil
+    Estudiante->>Web: Dibuja su firma en el Signature Pad (lienzo táctil)
+
+    Note over Estudiante, R2: 4. Confirmación y Registro Inmutable
+    Estudiante->>Web: Clic en "Guardar Asistencia"
+    Web->>API: POST /asistencias (codigo_sesion, materia_id, motivo, nombre, codigo, firma_base64)
+    API->>R2: Almacena imagen de firma (firmas/{sesion_id}/{asistencia_id}.webp)
+    API->>D1: INSERT INTO asistencias (sesion_id, materia_id, motivo, nombre, codigo, firma_url, fecha_hora=CURRENT_TIMESTAMP)
+    API-->>Web: Registro exitoso
+    Web-->>Estudiante: "¡Asistencia registrada correctamente!"
+    Web-->>Tutor1: Se actualiza la lista en pantalla
+    Web-->>Tutor2: Se actualiza la lista en pantalla simultáneamente
+
+    Note over Tutor1, API: 5. Cierre de Sesión Compartida
+    Tutor1->>Web: Finaliza el turno y pulsa "Cerrar Sesión de Asesorías"
+    Web->>API: PATCH /sesiones/:id/cerrar
+    API->>D1: UPDATE sesiones SET estado='cerrada', fecha_cierre=CURRENT_TIMESTAMP
+    API-->>Web: Sesión cerrada (el QR queda invalidado para nuevos registros)
 ```
 
-### 3.2 Avance Funcional Específico
-- ✅ **Módulo 4: CRUD de Materias**: 100% completado en Backend (`routes/materias.ts` + `services/materiaService.ts`). Valida código y nombre.
-- ✅ **Módulo 5: CRUD de Usuarios**: 100% completado en Backend (`routes/usuarios.ts` + `services/usuarioService.ts`). Protegido con RBAC para `SUPER_ADMIN`.
-- ⚠️ **Módulo 1: Autenticación**: Mock provisional en `middlewares/auth.ts` (acepta tokens `Bearer director`, `Bearer amigo`, etc. y headers `X-User-Role`). Falta endpoint formal `POST /auth/login` con generación/verificación JWT y hash de contraseñas.
-- ⏳ **Base de Datos D1**: `schema.sql` tiene `materias` y `usuarios`. Falta añadir `jornadas`, `sesiones` y `registros_firma`.
-- ⏳ **Wrangler Bindings**: Falta configurar bindings `[[d1_databases]]` y `[[r2_buckets]]` en `wrangler.jsonc`.
-- ⏳ **Módulo 2: Jornadas y Sesiones**: Archivos creados pero vacíos.
-- ⏳ **Módulo 3: Firma Electrónica**: Archivos creados pero vacíos. Falta conexión a R2.
-- ⏳ **Módulo 6: Consultas y Reportes**: Archivos creados pero vacíos.
-- ⏳ **Frontend**: Aún no inicializado en el repositorio.
-
 ---
 
-## 4. Esquema de Entidades y Datos
+## 5. Esquema de Entidades y Base de Datos (Cloudflare D1)
 
 ```mermaid
 erDiagram
-    USUARIOS ||--o{ JORNADAS : "abre"
-    JORNADAS ||--o{ SESIONES : "contiene"
-    MATERIAS ||--o{ SESIONES : "clasifica"
-    SESIONES ||--o{ REGISTROS_FIRMA : "recibe"
+    USUARIOS ||--o{ SESIONES : "iniciada_por"
+    SESIONES ||--o{ ASISTENCIAS : "agrupa"
+    MATERIAS ||--o{ ASISTENCIAS : "clasifica"
 
     USUARIOS {
         string id PK
         string nombre
         string correo UK
-        string password
+        string password "hash bcrypt"
         string tipo "SUPER_ADMIN | DIRECTOR | AMIGO_ACADEMICO"
+        datetime created_at
+        datetime updated_at
     }
 
     MATERIAS {
         string id PK
         string codigo UK
         string nombre
-    }
-
-    JORNADAS {
-        string id PK
-        string amigo_academico_id FK
-        datetime fecha_apertura
-        datetime fecha_cierre
-        string estado "abierta | cerrada"
+        datetime created_at
+        datetime updated_at
     }
 
     SESIONES {
         string id PK
-        string jornada_id FK
-        string materia_id FK
-        string tema
-        string tipo_sesion "individual | grupal"
-        string codigo UK
-        string estado "activa | expirada"
+        string codigo UK "Código para QR y enlace (ej: SALA-01)"
+        string creada_por_id FK "Amigo Académico que abrió la sala"
+        string estado "activa | cerrada"
+        datetime fecha_inicio "CURRENT_TIMESTAMP"
+        datetime fecha_cierre "NULL mientras esté activa"
+        datetime created_at
+        datetime updated_at
     }
 
-    REGISTROS_FIRMA {
+    ASISTENCIAS {
         string id PK
-        string sesion_id FK
+        string sesion_id FK "Sesión compartida activa"
+        string materia_id FK "Materia elegida por el estudiante"
+        string motivo "Tema o duda abordada en la asesoría"
         string nombre_estudiante
-        string firma_url "referencia Cloudflare R2"
-        string modo_firma "autonomo | asistido"
-        datetime fecha_hora
+        string codigo_estudiante "Código institucional universitario"
+        string firma_url "Ruta en Cloudflare R2"
+        datetime fecha_hora "CURRENT_TIMESTAMP automático de la BD"
     }
 ```
 
----
-
-## 5. Matriz de Asignación por Perfil de Desarrollador
-
-| Módulo / Componente | Desarrollador Asignado | Justificación y Enfoque |
-|---|---|---|
-| **Esquema D1 + Autenticación Base (JWT)** | **Ambos (Pair Programming)** | Cimiento crítico de seguridad y consistencia relacional. Ambos deben dominar el modelo. |
-| **CRUD de Materias (Backend + Frontend)** | **Desarrollador Sin Experiencia (Junior)** | *(Backend ya hecho)* Ideal para practicar el patrón CRUD completo sin complejidad de estado. |
-| **CRUD de Usuarios (Backend + Frontend)** | **Desarrollador Sin Experiencia (Junior)** | *(Backend ya hecho)* Refuerzo directo del patrón CRUD y gestión de formularios de administración. |
-| **Jornadas y Sesiones (Backend + Frontend)** | **Desarrollador Con Experiencia (Senior)** | Lógica central del sistema, generación de códigos únicos, control de ciclos de vida y expiración. |
-| **Firma Digital (R2 + Canvas + Asistido)** | **Desarrollador Con Experiencia (Senior / Pareja)** | Manejo de blobs binarios en Cloudflare R2, integración con canvas móvil y bloqueo de inmutabilidad. |
-| **Consultas, Filtros Dinámicos y Excel** | **Ambos (Junior en Frontend / Senior en Backend)** | Backend: queries dinámicas complejas. Frontend: UI de filtros, paginación y exportación con SheetJS. |
+### Reglas Clave del Modelo:
+1. **`asistencias` NO tiene `amigo_academico_id`**: La atención es grupal/institucional de sala.
+2. **`sesiones.codigo` es único y compartido**: Identifica la jornada de atención activa para todos los tutores de turno.
+3. **`asistencias.fecha_hora` automática**: `DEFAULT CURRENT_TIMESTAMP` para auditoría fidedigna.
+4. **Almacenamiento de firmas**: Bucket de Cloudflare R2 (`db-sd3-r2`).
 
 ---
 
-## 6. Próximos Pasos Prioritarios (Checklist Inmediato)
+## 6. Especificación de Endpoints (API Backend)
 
-1. [ ] **Completar `backend/src/db/schema.sql`**: Agregar tablas `jornadas`, `sesiones` y `registros_firma` con sus índices y llaves foráneas.
-2. [ ] **Configurar `wrangler.jsonc`**: Añadir los bindings para D1 (`DB`) y R2 (`FIRMAS_BUCKET`).
-3. [ ] **Implementar `routes/auth.ts`**: Endpoint `POST /auth/login` con JWT real y verificación de credenciales.
-4. [ ] **Implementar Módulo de Jornadas y Sesiones**: `jornadaService.ts`, `sesionService.ts`, y sus rutas asociadas con generación de códigos no colisionables.
-5. [ ] **Implementar Módulo de Firma**: `firmaService.ts` conectando R2 y D1, y validación estricta de estado activo.
-6. [ ] **Inicializar Frontend**: Crear app cliente con React + Vite + TypeScript en `/frontend`.
+### 6.1 Autenticación y Cuentas (`/auth` y `/usuarios`)
+- `POST /auth/login` → Login para Directores, Super Admins y Amigos Académicos. Retorna JWT.
+- `GET /usuarios` → Listar usuarios (solo `SUPER_ADMIN` y `DIRECTOR`). Los directores pueden ver y filtrar los Amigos Académicos.
+- `POST /usuarios` → Creación de Amigo Académico exclusivamente por el **DIRECTOR** o **SUPER_ADMIN**.
+
+### 6.2 Catálogo de Materias (`/materias`)
+- `GET /materias` → Lista todas las materias (público / optimizado para el buscador del estudiante y paneles).
+- `POST /materias` → Crear materia (`SUPER_ADMIN`, `DIRECTOR`).
+- `PUT /materias/:id` → Modificar materia (`SUPER_ADMIN`, `DIRECTOR`).
+- `DELETE /materias/:id` → Eliminar materia (`SUPER_ADMIN`, `DIRECTOR`).
+
+### 6.3 Sesión Compartida de Sala (`/sesiones`)
+- `GET /sesiones/activa` → Retorna la sesión activa actual de la sala (si existe), junto con su código y QR.
+- `POST /sesiones/abrir` → Si no hay sesión activa, crea una nueva con código único. Si ya existe una activa, retorna la existente para sumarse a ella.
+- `GET /sesiones/verificar/:codigo` → **Público**: Valida que la sesión del QR escaneado por el alumno siga activa.
+- `GET /sesiones/:id/asistencias` → Retorna la lista en vivo de estudiantes registrados en la sesión.
+- `PATCH /sesiones/:id/cerrar` → Finaliza la sesión compartida (invalida el QR).
+
+### 6.4 Registro de Asistencias del Estudiante (`/asistencias`)
+- `POST /asistencias` → **Público**:
+  - Parámetros: `codigo_sesion`, `materia_id`, `motivo`, `nombre_estudiante`, `codigo_estudiante`, `firma_base64`.
+  - Guarda la imagen de la firma en R2 (`FIRMAS_BUCKET`).
+  - Inserta en D1 con fecha/hora automática.
+- `GET /firmas/:asistencia_id` → Visualización segura de la firma en R2 (para auditoría).
+
+### 6.5 Auditoría y Reportes (`/reportes`)
+- `GET /reportes/asistencias` → Consulta general con filtros: rango de fechas, materia, código o nombre de estudiante.
+- `GET /reportes/excel` → Descarga del consolidado en formato `.xlsx`.
 
 ---
-*Última actualización: 2026-09-30 — Configuración inicial del contexto y análisis de código existente.*
+
+## 7. Plan de Implementación Técnica Inmediato
+
+1. **Base de Datos (`backend/src/db/schema.sql`)**:
+   - Ajustar tablas a: `materias`, `usuarios`, `sesiones` (compartida) y `asistencias`.
+2. **Tipos TypeScript (`backend/src/types/index.ts`)**:
+   - Reflejar los nuevos modelos y DTOs exactos.
+3. **Servicios y Rutas de Backend**:
+   - `sesionService.ts` y `sesiones.ts`: Lógica de sesión compartida única (`abrir`, `activa`, `verificar`, `cerrar`).
+   - `asistenciaService.ts` y `asistencias.ts`: Formulario público, subida a R2 y registro en D1.
+   - `auth.ts`: Login con JWT y permisos para que los directores creen amigos académicos.

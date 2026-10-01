@@ -10,28 +10,34 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
-	/**
-	 * Smart Placement
-	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
-	// "placement": {  "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
-	 */
-	// "vars": {  "MY_VARIABLE": "production_value" }
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+	"upload_source_maps": true,
+	// ─────────────────────────────────────────────────────────────
+	// VARIABLES DE ENTORNO
+	// ⚠️ JWT_SECRET: en producción usa `npx wrangler secret put JWT_SECRET`
+	//    y elimina esta entrada de vars (texto plano solo para desarrollo local)
+	// ─────────────────────────────────────────────────────────────
+	"vars": {
+		"JWT_SECRET": "9gTBrQ13atPYaegprRXyxVpAOqoEMKQDRw2sFoS9kZVGWnyaj6_SYjykmh1UGdf9cMK_qkNjXZgMepjyC95jXg"
+	},
+	// ─────────────────────────────────────────────────────────────
+	// CLOUDFLARE D1 — Base de datos SQLite en el Edge
+	// Acceso en código: c.env.DB  (tipo D1Database)
+	// ─────────────────────────────────────────────────────────────
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "db-sd3-d1",
+			"database_id": "9e3e4b08-f317-42b8-b5c9-18f402b3905b"
+		}
+	],
+	// ─────────────────────────────────────────────────────────────
+	// CLOUDFLARE R2 — Object Storage para imágenes de firmas
+	// Acceso en código: c.env.FIRMAS_BUCKET  (tipo R2Bucket)
+	// ─────────────────────────────────────────────────────────────
+	"r2_buckets": [
+		{
+			"binding": "FIRMAS_BUCKET",
+			"bucket_name": "db-sd3-r2"
+		}
+	]
 }

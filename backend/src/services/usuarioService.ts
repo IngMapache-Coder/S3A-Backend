@@ -4,21 +4,21 @@ let inMemoryUsuarios: Usuario[] = [
   {
     id: 'usr-1',
     nombre: 'Super Administrador',
-    correo: 'admin@s3a.edu.co',
+    correo: 'admin@ufps.edu.co',
     tipo: 'SUPER_ADMIN',
     createdAt: new Date().toISOString(),
   },
   {
     id: 'usr-2',
     nombre: 'Carlos Pérez',
-    correo: 'cperez@s3a.edu.co',
+    correo: 'cperez@ufps.edu.co',
     tipo: 'DIRECTOR',
     createdAt: new Date().toISOString(),
   },
   {
     id: 'usr-3',
     nombre: 'Ana Gómez',
-    correo: 'agomez@s3a.edu.co',
+    correo: 'agomez@ufps.edu.co',
     tipo: 'AMIGO_ACADEMICO',
     createdAt: new Date().toISOString(),
   }
@@ -99,18 +99,34 @@ export class UsuarioService {
     }
 
     if (this.db) {
-      await this.db
-        .prepare(
-          'UPDATE usuarios SET nombre = ?, correo = ?, tipo = ?, updated_at = ? WHERE id = ?'
-        )
-        .bind(
-          updated.nombre,
-          updated.correo,
-          updated.tipo,
-          updated.updatedAt || null,
-          id
-        )
-        .run();
+      if (data.password !== undefined) {
+        await this.db
+          .prepare(
+            'UPDATE usuarios SET nombre = ?, correo = ?, password = ?, tipo = ?, updated_at = ? WHERE id = ?'
+          )
+          .bind(
+            updated.nombre,
+            updated.correo,
+            updated.password,
+            updated.tipo,
+            updated.updatedAt || null,
+            id
+          )
+          .run();
+      } else {
+        await this.db
+          .prepare(
+            'UPDATE usuarios SET nombre = ?, correo = ?, tipo = ?, updated_at = ? WHERE id = ?'
+          )
+          .bind(
+            updated.nombre,
+            updated.correo,
+            updated.tipo,
+            updated.updatedAt || null,
+            id
+          )
+          .run();
+      }
     } else {
       const idx = inMemoryUsuarios.findIndex((u) => u.id === id);
       if (idx !== -1) {
