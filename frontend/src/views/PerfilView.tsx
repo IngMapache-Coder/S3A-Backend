@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   UserCircleIcon,
   ShieldCheckIcon,
-  KeyIcon,
   LockClosedIcon,
   EyeIcon,
   EyeSlashIcon,
@@ -160,14 +159,6 @@ export const PerfilView: React.FC<PerfilViewProps> = ({ user }) => {
                 <div>
                   <span style={{ fontSize: '12px', color: '#757575', display: 'block' }}>Rol en Plataforma</span>
                   <span style={{ fontSize: '14px', color: '#212121', fontWeight: 500 }}>{getRoleLabel(user.tipo)}</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                <KeyIcon style={{ width: '20px', height: '20px', color: '#757575', marginTop: '2px' }} />
-                <div>
-                  <span style={{ fontSize: '12px', color: '#757575', display: 'block' }}>Identificador Único</span>
-                  <span style={{ fontSize: '13px', color: '#616161', fontFamily: 'monospace' }}>{user.id}</span>
                 </div>
               </div>
             </div>

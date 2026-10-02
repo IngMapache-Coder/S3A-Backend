@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   QrCodeIcon,
   UserGroupIcon,
@@ -14,11 +14,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { api, type Sesion, type Asistencia } from '../api/client.js';
 import { formatColombiaTime, getColombiaHeaderDate } from '../utils/date.js';
 
-interface TutorSalaViewProps {
-  onAbrirComoEstudiante: (codigo: string) => void;
-}
 
-export const TutorSalaView: React.FC<TutorSalaViewProps> = ({ onAbrirComoEstudiante }) => {
+export const TutorSalaView = () => {
   const [sesion, setSesion] = useState<Sesion | null>(null);
   const [asistencias, setAsistencias] = useState<Asistencia[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,7 +111,7 @@ export const TutorSalaView: React.FC<TutorSalaViewProps> = ({ onAbrirComoEstudia
         <div>
           <h1 className="page-title">Sala de Asesorías — Amigo Académico</h1>
           <p style={{ fontSize: '0.86rem', color: '#607D8B', marginTop: '2px' }}>
-            Sesión compartida activa para los tutores en turno. Todos proyectan el mismo código QR.
+            Sesión compartida activa para los tutores en turno.
           </p>
         </div>
         <div className="page-date">{getColombiaHeaderDate()}</div>
@@ -185,7 +182,7 @@ export const TutorSalaView: React.FC<TutorSalaViewProps> = ({ onAbrirComoEstudia
             <div className="card-header">
               <span className="card-title">
                 <CheckCircleIcon style={{ width: '18px', height: '18px', color: '#00A65A' }} />
-                QR Compartido de Sala
+                QR de Sala
               </span>
               <span className="badge-tag green">Activa</span>
             </div>
@@ -242,14 +239,6 @@ export const TutorSalaView: React.FC<TutorSalaViewProps> = ({ onAbrirComoEstudia
                 </button>
 
                 <button
-                  className="btn btn-outline-red"
-                  onClick={() => onAbrirComoEstudiante(sesion.codigo)}
-                  style={{ width: '100%', fontSize: '0.82rem' }}
-                >
-                  Probar Firma en este Dispositivo
-                </button>
-
-                <button
                   className="btn btn-red"
                   onClick={handleCerrarSesion}
                   disabled={accionLoading}
@@ -265,7 +254,7 @@ export const TutorSalaView: React.FC<TutorSalaViewProps> = ({ onAbrirComoEstudia
             <div className="card-header">
               <span className="card-title">
                 <UserGroupIcon style={{ width: '18px', height: '18px', color: '#C62828' }} />
-                Estudiantes Registrados en Vivo ({asistencias.length})
+                Estudiantes Registrados ({asistencias.length})
               </span>
               <button
                 className="btn btn-secondary"

@@ -67,7 +67,7 @@ export const ReportesView: React.FC = () => {
 
     const datosExcel = asistencias.map((a, index) => ({
       'N°': index + 1,
-      'Fecha y Hora (Colombia)': formatColombiaDateTime(a.fechaHora),
+      'Fecha y Hora': formatColombiaDateTime(a.fechaHora),
       'Código Estudiantil': a.codigoEstudiante,
       'Nombre Estudiante': a.nombreEstudiante,
       'Materia': a.materiaNombre || 'Asesoría Académica',
@@ -230,7 +230,7 @@ export const ReportesView: React.FC = () => {
               <table className="ufps-table">
                 <thead>
                   <tr>
-                    <th>Fecha / Hora (Colombia)</th>
+                    <th>Fecha / Hora</th>
                     <th>Estudiante</th>
                     <th>Código</th>
                     <th>Materia</th>

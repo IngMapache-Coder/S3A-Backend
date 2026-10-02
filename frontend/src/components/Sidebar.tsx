@@ -168,21 +168,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="badge-tag green">QR</span>
           </div>
         </li>
-
-        <div className="sidebar-nav-header" style={{ marginTop: '16px' }}>Mi Cuenta</div>
-
-        <li className="sidebar-item">
-          <div
-            className={`sidebar-link ${activeTab === 'perfil' ? 'active' : ''}`}
-            onClick={() => onSelectTab('perfil')}
-          >
-            <div className="sidebar-link-content">
-              <UserCircleIcon className="sidebar-icon" style={{ width: '18px', height: '18px' }} />
-              <span>Mi Perfil y Seguridad</span>
-            </div>
-            <span className="badge-tag gray">UFPS</span>
-          </div>
-        </li>
       </ul>
     </aside>
   );

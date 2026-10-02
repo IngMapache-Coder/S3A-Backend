@@ -79,9 +79,6 @@ export const TutoresView: React.FC = () => {
       <div className="page-breadcrumb-bar">
         <div>
           <h1 className="page-title">Gestión de Amigos Académicos</h1>
-          <p style={{ fontSize: '0.86rem', color: '#607D8B', marginTop: '2px' }}>
-            Aprovisionamiento exclusivo por el Director de Programa. Los tutores no poseen autoregistro.
-          </p>
         </div>
         <button className="btn btn-red" onClick={() => setModalAbierto(true)}>
           <UserPlusIcon style={{ width: '16px', height: '16px' }} />
