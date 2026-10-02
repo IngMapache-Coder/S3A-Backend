@@ -6,15 +6,6 @@ import type { Env, Variables } from '../types/env.js';
 
 const sesiones = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// ─────────────────────────────────────────────────────────────
-// Rutas PÚBLICAS (sin autenticación)
-// ─────────────────────────────────────────────────────────────
-
-/**
- * GET /sesiones/verificar/:codigo
- * Verifica que el código QR escaneado por el estudiante corresponda
- * a una sesión activa. Ruta pública (usada desde el celular).
- */
 sesiones.get('/verificar/:codigo', async (c) => {
   try {
     const codigo = c.req.param('codigo');
@@ -32,17 +23,8 @@ sesiones.get('/verificar/:codigo', async (c) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// Rutas PROTEGIDAS (requieren JWT de AMIGO_ACADEMICO o superiores)
-// ─────────────────────────────────────────────────────────────
-
 sesiones.use('*', authMiddleware);
 
-/**
- * GET /sesiones/activa
- * Retorna la sesión compartida activa actual (si existe).
- * Usada por los Amigos Académicos al iniciar su turno.
- */
 sesiones.get('/activa', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUPER_ADMIN'), async (c) => {
   try {
     const service = new SesionService(c.env.DB);
@@ -85,10 +67,6 @@ const abrirSesionHandler = async (c: Context<{ Bindings: Env; Variables: Variabl
 sesiones.post('/abrir', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUPER_ADMIN'), abrirSesionHandler);
 sesiones.post('/abrir-compartida', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUPER_ADMIN'), abrirSesionHandler);
 
-/**
- * GET /sesiones/:id/asistencias
- * Retorna la lista en vivo de estudiantes registrados en la sesión.
- */
 sesiones.get('/:id/asistencias', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUPER_ADMIN'), async (c) => {
   try {
     const sesionId = c.req.param('id');
@@ -102,10 +80,6 @@ sesiones.get('/:id/asistencias', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUP
   }
 });
 
-/**
- * PATCH /sesiones/:id/cerrar
- * Cierra la sesión compartida (invalida el QR para nuevos registros).
- */
 sesiones.patch('/:id/cerrar', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUPER_ADMIN'), async (c) => {
   try {
     const id = c.req.param('id');

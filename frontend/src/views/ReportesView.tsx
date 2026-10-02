@@ -9,7 +9,7 @@ import {
   ArrowPathIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import * as XLSX from 'xlsx';
+import { exportarAsistenciasExcel, type ExportProgress } from '../utils/excelExport.js';
 import { api, type Asistencia, type Materia } from '../api/client.js';
 import { formatColombiaDateTime } from '../utils/date.js';
 
@@ -17,6 +17,8 @@ export const ReportesView: React.FC = () => {
   const [asistencias, setAsistencias] = useState<Asistencia[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exportando, setExportando] = useState(false);
+  const [progresoExport, setProgresoExport] = useState<ExportProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [desde, setDesde] = useState('');
@@ -59,36 +61,24 @@ export const ReportesView: React.FC = () => {
     consultar();
   }, []);
 
-  const handleDescargarExcel = () => {
+  const handleDescargarExcel = async () => {
     if (asistencias.length === 0) {
       alert('No hay asistencias registradas para exportar.');
       return;
     }
-
-    const datosExcel = asistencias.map((a, index) => ({
-      'N°': index + 1,
-      'Fecha y Hora': formatColombiaDateTime(a.fechaHora),
-      'Código Estudiantil': a.codigoEstudiante,
-      'Nombre Estudiante': a.nombreEstudiante,
-      'Materia': a.materiaNombre || 'Asesoría Académica',
-      'Motivo / Tema': a.motivo,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(datosExcel);
-    worksheet['!cols'] = [
-      { wch: 6 },
-      { wch: 26 },
-      { wch: 18 },
-      { wch: 32 },
-      { wch: 28 },
-      { wch: 36 },
-    ];
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Asistencias S3A');
-
-    const fechaHoy = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(workbook, `asistencias_amigo_academico_${fechaHoy}.xlsx`);
+    try {
+      setExportando(true);
+      await exportarAsistenciasExcel(
+        asistencias,
+        `asistencias_s3a_${new Date().toISOString().slice(0, 10)}.xlsx`,
+        (prog) => setProgresoExport(prog)
+      );
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Error al generar archivo Excel.');
+    } finally {
+      setExportando(false);
+      setProgresoExport(null);
+    }
   };
 
   return (
@@ -97,12 +87,21 @@ export const ReportesView: React.FC = () => {
         <div>
           <h1 className="page-title">Auditoría y Reportes de Asistencia</h1>
           <p style={{ fontSize: '0.86rem', color: '#607D8B', marginTop: '2px' }}>
-            Consolidado histórico de asistencias con verificación visual de firmas manuscritas.
+            Consolidado histórico de asistencias con verificación visual y exportación digitales manuscritas.
           </p>
         </div>
-        <button className="btn btn-green" onClick={handleDescargarExcel}>
-          <ArrowDownTrayIcon style={{ width: '16px', height: '16px' }} />
-          Descargar en Excel (.xlsx)
+        <button className="btn btn-green" onClick={handleDescargarExcel} disabled={exportando || loading}>
+          {exportando ? (
+            <>
+              <ArrowPathIcon className="animate-spin" style={{ width: '16px', height: '16px' }} />
+              {progresoExport ? `${progresoExport.actual}/${progresoExport.total}` : 'Exportando firmas...'}
+            </>
+          ) : (
+            <>
+              <ArrowDownTrayIcon style={{ width: '16px', height: '16px' }} />
+              Descargar en Excel (.xlsx)
+            </>
+          )}
         </button>
       </div>
 
@@ -230,19 +229,39 @@ export const ReportesView: React.FC = () => {
               <table className="ufps-table">
                 <thead>
                   <tr>
-                    <th>Fecha / Hora</th>
-                    <th>Estudiante</th>
-                    <th>Código</th>
-                    <th>Materia</th>
-                    <th>Motivo Asesoría</th>
-                    <th style={{ textAlign: 'right' }}>Firma</th>
+                    <th style={{ width: '50px', textAlign: 'center' }}>N°</th>
+                    <th>Código Materia</th>
+                    <th>Nombre Materia</th>
+                    <th>Nombre y Apellido Estudiante</th>
+                    <th>Código Estudiante</th>
+                    <th>Temas</th>
+                    <th>Fecha y Hora</th>
+                    <th style={{ textAlign: 'center', width: '110px' }}>Firma</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {asistencias.map((a) => (
+                  {asistencias.map((a, idx) => (
                     <tr key={a.id}>
-                      <td style={{ fontSize: '0.82rem', color: '#555', whiteSpace: 'nowrap' }}>
-                        {formatColombiaDateTime(a.fechaHora)}
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#78909C' }}>
+                        {idx + 1}
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            fontFamily: 'monospace',
+                            backgroundColor: '#E8EAF6',
+                            color: '#1A237E',
+                            padding: '2px 7px',
+                            borderRadius: '3px',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {a.materiaCodigo || 'N/A'}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 600, color: '#263238' }}>
+                        {a.materiaNombre || 'Asesoría Académica'}
                       </td>
                       <td style={{ fontWeight: 600 }}>{a.nombreEstudiante}</td>
                       <td>
@@ -258,13 +277,13 @@ export const ReportesView: React.FC = () => {
                           {a.codigoEstudiante}
                         </span>
                       </td>
-                      <td style={{ color: '#0073B7', fontWeight: 500 }}>
-                        {a.materiaNombre || 'Materia'}
-                      </td>
                       <td style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {a.motivo}
                       </td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td style={{ fontSize: '0.82rem', color: '#555', whiteSpace: 'nowrap' }}>
+                        {formatColombiaDateTime(a.fechaHora)}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
                         <button
                           className="btn btn-secondary"
                           onClick={() => {

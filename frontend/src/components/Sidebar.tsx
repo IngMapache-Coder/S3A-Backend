@@ -120,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <div className="sidebar-link-content">
                   <UsersIcon className="sidebar-icon" style={{ width: '18px', height: '18px' }} />
-                  <span>Amigos Académicos</span>
+                  <span>{user?.tipo === 'SUPER_ADMIN' ? 'Directores y Tutores' : 'Amigos Académicos'}</span>
                 </div>
                 <span className="badge-tag gray">Cuentas</span>
               </div>

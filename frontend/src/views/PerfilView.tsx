@@ -87,7 +87,6 @@ export const PerfilView: React.FC<PerfilViewProps> = ({ user }) => {
 
   return (
     <div>
-      {/* Encabezado de la página */}
       <div className="page-breadcrumb-bar">
         <div>
           <h1 className="page-title">Mi Perfil Institucional</h1>
@@ -98,7 +97,6 @@ export const PerfilView: React.FC<PerfilViewProps> = ({ user }) => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px', marginTop: '16px' }}>
-        {/* Tarjeta de Información del Usuario */}
         <div className="panel-card">
           <div className="panel-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <UserCircleIcon style={{ width: '20px', height: '20px', color: '#C62828' }} />
@@ -165,7 +163,6 @@ export const PerfilView: React.FC<PerfilViewProps> = ({ user }) => {
           </div>
         </div>
 
-        {/* Tarjeta de Seguridad: Cambio de Contraseña */}
         <div className="panel-card">
           <div className="panel-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <LockClosedIcon style={{ width: '20px', height: '20px', color: '#C62828' }} />
@@ -219,7 +216,6 @@ export const PerfilView: React.FC<PerfilViewProps> = ({ user }) => {
             )}
 
             <form onSubmit={handleCambiarPassword}>
-              {/* Contraseña Actual */}
               <div className="form-group" style={{ marginBottom: '16px' }}>
                 <label className="form-label" style={{ fontSize: '13px' }}>
                   Contraseña Actual *
@@ -261,7 +257,6 @@ export const PerfilView: React.FC<PerfilViewProps> = ({ user }) => {
                 </div>
               </div>
 
-              {/* Nueva Contraseña */}
               <div className="form-group" style={{ marginBottom: '16px' }}>
                 <label className="form-label" style={{ fontSize: '13px' }}>
                   Nueva Contraseña (mínimo 6 caracteres) *
@@ -304,7 +299,6 @@ export const PerfilView: React.FC<PerfilViewProps> = ({ user }) => {
                 </div>
               </div>
 
-              {/* Confirmar Nueva Contraseña */}
               <div className="form-group" style={{ marginBottom: '22px' }}>
                 <label className="form-label" style={{ fontSize: '13px' }}>
                   Confirmar Nueva Contraseña *

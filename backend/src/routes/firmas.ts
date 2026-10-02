@@ -7,11 +7,6 @@ const firmas = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 firmas.use('*', authMiddleware);
 
-/**
- * GET /firmas/:asistenciaId
- * Devuelve la imagen de la firma almacenada en R2 para auditoría.
- * Solo accesible por DIRECTOR y SUPER_ADMIN.
- */
 firmas.get('/:asistenciaId', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUPER_ADMIN'), async (c) => {
   try {
     const asistenciaId = c.req.param('asistenciaId');

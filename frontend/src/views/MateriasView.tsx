@@ -215,7 +215,6 @@ export const MateriasView: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal Crear / Editar Materia */}
       {modalAbierto && (
         <div className="modal-overlay" onClick={() => setModalAbierto(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

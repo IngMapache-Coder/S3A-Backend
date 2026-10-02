@@ -116,6 +116,7 @@ erDiagram
         string correo UK
         string password "hash bcrypt"
         string tipo "SUPER_ADMIN | DIRECTOR | AMIGO_ACADEMICO"
+        boolean debe_cambiar_password "obligatorio para Director y Amigo Académico al primer ingreso"
         datetime created_at
         datetime updated_at
     }
@@ -186,9 +187,8 @@ erDiagram
   - Inserta en D1 con fecha/hora automática.
 - `GET /firmas/:asistencia_id` → Visualización segura de la firma en R2 (para auditoría).
 
-### 6.5 Auditoría y Reportes (`/reportes`)
 - `GET /reportes/asistencias` → Consulta general con filtros: rango de fechas, materia, código o nombre de estudiante.
-- `GET /reportes/excel` → Descarga del consolidado en formato `.xlsx`.
+- `GET /reportes/excel` → Descarga del consolidado en formato `.xlsx` con las 8 columnas requeridas y todas las firmas manuscritas incrustadas directamente en cada fila.
 
 ---
 

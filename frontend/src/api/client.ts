@@ -1,10 +1,11 @@
-const API_BASE = '';
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export interface User {
   id: string;
   nombre: string;
   correo: string;
   tipo: 'SUPER_ADMIN' | 'DIRECTOR' | 'AMIGO_ACADEMICO';
+  debeCambiarPassword?: boolean;
 }
 
 export interface Materia {
@@ -30,6 +31,7 @@ export interface Asistencia {
   sesionId: string;
   codigoSesion?: string;
   materiaId: string;
+  materiaCodigo?: string;
   materiaNombre?: string;
   motivo: string;
   nombreEstudiante: string;

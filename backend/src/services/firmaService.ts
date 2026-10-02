@@ -1,18 +1,9 @@
 import type { Asistencia, CreateAsistenciaDTO } from '../types/index.js';
 
-// ─────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────
 function newId(): string {
   return `asi-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 }
 
-// ─────────────────────────────────────────────────────────────
-// FirmaService
-// Gestión del registro de asistencia del estudiante:
-//   - Sube la firma a Cloudflare R2
-//   - Inserta el registro en D1
-// ─────────────────────────────────────────────────────────────
 export class FirmaService {
   private db: D1Database;
   private bucket: R2Bucket;
@@ -22,14 +13,7 @@ export class FirmaService {
     this.bucket = bucket;
   }
 
-  /**
-   * Registra la asistencia de un estudiante:
-   *  1. Valida que el codigo_sesion pertenezca a una sesión activa.
-   *  2. Sube la imagen de firma (base64 → ArrayBuffer) a R2.
-   *  3. Inserta el registro en la tabla asistencias de D1.
-   */
   async registrar(data: CreateAsistenciaDTO): Promise<Asistencia> {
-    // 1. Obtener la sesión activa por código
     const sesion = await this.db
       .prepare(`SELECT id FROM sesiones WHERE codigo = ? AND estado = 'activa'`)
       .bind(data.codigoSesion)
@@ -39,7 +23,6 @@ export class FirmaService {
       throw new Error(`Sesión con código "${data.codigoSesion}" no encontrada o ya cerrada.`);
     }
 
-    // 2. Decodificar base64 → ArrayBuffer y subir a R2
     const asistenciaId = newId();
 
     const mimeMatch = data.firmaBase64.match(/^data:(image\/[a-zA-Z0-9+]+);base64,/);
@@ -47,7 +30,6 @@ export class FirmaService {
     const extension = contentType.includes('webp') ? 'webp' : 'png';
     const r2Key = `firmas/${sesion.id}/${asistenciaId}.${extension}`;
 
-    // El base64 puede venir con o sin prefijo data:image/...;base64,
     const base64Data = data.firmaBase64.includes(',')
       ? (data.firmaBase64.split(',')[1] ?? '')
       : data.firmaBase64;
@@ -62,7 +44,6 @@ export class FirmaService {
       httpMetadata: { contentType },
     });
 
-    // 3. Insertar en D1
     await this.db
       .prepare(
         `INSERT INTO asistencias
@@ -100,9 +81,6 @@ export class FirmaService {
     return registro;
   }
 
-  /**
-   * Lista todas las asistencias de una sesión (vista en vivo para el tutor).
-   */
   async listarPorSesion(sesionId: string): Promise<Asistencia[]> {
     const { results } = await this.db
       .prepare(
@@ -110,6 +88,7 @@ export class FirmaService {
           a.id,
           a.sesion_id          AS sesionId,
           a.materia_id         AS materiaId,
+          m.codigo             AS materiaCodigo,
           m.nombre             AS materiaNombre,
           a.motivo,
           a.nombre_estudiante  AS nombreEstudiante,
@@ -122,16 +101,11 @@ export class FirmaService {
          ORDER BY a.fecha_hora ASC`
       )
       .bind(sesionId)
-      .all<Asistencia & { materiaNombre?: string }>();
+      .all<Asistencia>();
     return results ?? [];
   }
 
-  /**
-   * Obtiene la imagen de una firma desde R2 para auditoría.
-   * Retorna el objeto R2 o null si no existe.
-   */
   async getFirma(asistenciaId: string): Promise<R2ObjectBody | null> {
-    // Buscar la firma_url del registro
     const row = await this.db
       .prepare(`SELECT firma_url AS firmaUrl FROM asistencias WHERE id = ?`)
       .bind(asistenciaId)
@@ -142,17 +116,13 @@ export class FirmaService {
     return obj;
   }
 
-  /**
-   * Consulta general de asistencias con filtros opcionales.
-   * Usada por el panel de reportes del Director / Super Admin.
-   */
   async consultar(filtros: {
     desde?: string | undefined;
     hasta?: string | undefined;
     materiaId?: string | undefined;
     codigoEstudiante?: string | undefined;
     nombreEstudiante?: string | undefined;
-  }): Promise<(Asistencia & { materiaNombre: string; codigoSesion: string })[]> {
+  }): Promise<(Asistencia & { materiaNombre: string; materiaCodigo: string; codigoSesion: string })[]> {
     const condiciones: string[] = [];
     const valores: unknown[] = [];
 
@@ -185,6 +155,7 @@ export class FirmaService {
         a.sesion_id          AS sesionId,
         s.codigo             AS codigoSesion,
         a.materia_id         AS materiaId,
+        m.codigo             AS materiaCodigo,
         m.nombre             AS materiaNombre,
         a.motivo,
         a.nombre_estudiante  AS nombreEstudiante,
@@ -200,7 +171,7 @@ export class FirmaService {
 
     const stmt = this.db.prepare(sql);
     const bound = valores.length > 0 ? stmt.bind(...valores) : stmt;
-    const { results } = await bound.all<Asistencia & { materiaNombre: string; codigoSesion: string }>();
+    const { results } = await bound.all<Asistencia & { materiaNombre: string; materiaCodigo: string; codigoSesion: string }>();
     return results ?? [];
   }
 }

@@ -103,7 +103,7 @@ export const EstudianteFirmaView: React.FC<EstudianteFirmaViewProps> = ({
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#0D47A1';
+    ctx.strokeStyle = '#000000';
     ctx.lineTo(x, y);
     ctx.stroke();
     setTieneFirma(true);

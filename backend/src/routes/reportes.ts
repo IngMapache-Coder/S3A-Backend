@@ -8,17 +8,6 @@ const reportes = new Hono<{ Bindings: Env; Variables: Variables }>();
 reportes.use('*', authMiddleware);
 reportes.use('*', requireRole('DIRECTOR', 'SUPER_ADMIN'));
 
-/**
- * GET /reportes/asistencias
- * Consulta general de asistencias con filtros opcionales.
- *
- * Query params opcionales:
- *   desde            — fecha ISO inicio (ej: 2026-01-01)
- *   hasta            — fecha ISO fin
- *   materiaId        — ID de materia
- *   codigoEstudiante — código institucional (parcial)
- *   nombreEstudiante — nombre del estudiante (parcial, sin distinción mayúsculas)
- */
 reportes.get('/asistencias', async (c) => {
   try {
     const q = c.req.query();
@@ -44,11 +33,6 @@ reportes.get('/asistencias', async (c) => {
   }
 });
 
-/**
- * GET /reportes/excel
- * Descarga un archivo CSV compatible con Excel (con BOM UTF-8)
- * que contiene el consolidado de asistencias.
- */
 reportes.get('/excel', async (c) => {
   try {
     const q = c.req.query();
@@ -67,32 +51,32 @@ reportes.get('/excel', async (c) => {
       nombreEstudiante: nombreEstudiante || undefined,
     });
 
-    // Construir CSV
     const headers = [
-      'Fecha y Hora',
-      'Código Sesión',
-      'Materia',
-      'Motivo',
-      'Nombre Estudiante',
+      'N° Registro',
+      'Código Materia',
+      'Nombre Materia',
+      'Nombre y Apellido Estudiante',
       'Código Estudiante',
-      'Ruta Firma (R2)',
+      'Temas',
+      'Fecha y Hora',
+      'Firma (R2)',
     ];
 
     const escape = (val: unknown) => `"${String(val ?? '').replace(/"/g, '""')}"`;
 
-    const rows = data.map((r) =>
+    const rows = data.map((r, index) =>
       [
-        escape(r.fechaHora),
-        escape(r.codigoSesion),
+        index + 1,
+        escape(r.materiaCodigo || ''),
         escape(r.materiaNombre),
-        escape(r.motivo),
         escape(r.nombreEstudiante),
         escape(r.codigoEstudiante),
+        escape(r.motivo),
+        escape(r.fechaHora),
         escape(r.firmaUrl),
       ].join(',')
     );
 
-    // \uFEFF es el BOM de UTF-8 que hace que Excel reconozca tildes y caracteres en español
     const csv = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
     const fecha = new Date().toISOString().slice(0, 10);
 

@@ -9,17 +9,24 @@ import {
   ArrowsPointingOutIcon,
   AcademicCapIcon,
   CheckCircleIcon,
+  ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 import { QRCodeSVG } from 'qrcode.react';
 import { api, type Sesion, type Asistencia } from '../api/client.js';
-import { formatColombiaTime, getColombiaHeaderDate } from '../utils/date.js';
+import { formatColombiaDateTime, getColombiaHeaderDate } from '../utils/date.js';
+import { exportarAsistenciasExcel, type ExportProgress } from '../utils/excelExport.js';
 
+interface TutorSalaViewProps {
+  onAbrirComoEstudiante?: (codigo: string) => void;
+}
 
-export const TutorSalaView = () => {
+export const TutorSalaView = ({ onAbrirComoEstudiante: _ }: TutorSalaViewProps = {}) => {
   const [sesion, setSesion] = useState<Sesion | null>(null);
   const [asistencias, setAsistencias] = useState<Asistencia[]>([]);
   const [loading, setLoading] = useState(true);
   const [accionLoading, setAccionLoading] = useState(false);
+  const [exportando, setExportando] = useState(false);
+  const [progresoExport, setProgresoExport] = useState<ExportProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [firmaModalUrl, setFirmaModalUrl] = useState<string | null>(null);
   const [firmaModalEstudiante, setFirmaModalEstudiante] = useState<string | null>(null);
@@ -57,7 +64,7 @@ export const TutorSalaView = () => {
           setSesion(null);
           setAsistencias([]);
         }
-      } catch { /* polling silencioso */ }
+      } catch {}
     }, 4000);
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, []);
@@ -251,20 +258,57 @@ export const TutorSalaView = () => {
           </div>
 
           <div className="ufps-card card-red">
-            <div className="card-header">
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
               <span className="card-title">
                 <UserGroupIcon style={{ width: '18px', height: '18px', color: '#C62828' }} />
                 Estudiantes Registrados ({asistencias.length})
               </span>
-              <button
-                className="btn btn-secondary"
-                onClick={cargarEstado}
-                style={{ padding: '4px 10px', fontSize: '0.78rem' }}
-                title="Actualizar lista"
-              >
-                <ArrowPathIcon style={{ width: '13px', height: '13px' }} />
-                Refrescar
-              </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {asistencias.length > 0 && (
+                  <button
+                    className="btn btn-green"
+                    onClick={async () => {
+                      try {
+                        setExportando(true);
+                        await exportarAsistenciasExcel(
+                          asistencias,
+                          `asistencias_sala_${sesion.codigo}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+                          (prog) => setProgresoExport(prog)
+                        );
+                      } catch (err: unknown) {
+                        alert(err instanceof Error ? err.message : 'Error al exportar a Excel');
+                      } finally {
+                        setExportando(false);
+                        setProgresoExport(null);
+                      }
+                    }}
+                    disabled={exportando}
+                    style={{ padding: '4px 10px', fontSize: '0.78rem' }}
+                    title="Exportar a Excel"
+                  >
+                    {exportando ? (
+                      <>
+                        <ArrowPathIcon className="animate-spin" style={{ width: '13px', height: '13px' }} />
+                        {progresoExport ? `${progresoExport.actual}/${progresoExport.total}` : 'Exportando...'}
+                      </>
+                    ) : (
+                      <>
+                        <ArrowDownTrayIcon style={{ width: '13px', height: '13px' }} />
+                        Exportar Excel (.xlsx)
+                      </>
+                    )}
+                  </button>
+                )}
+                <button
+                  className="btn btn-secondary"
+                  onClick={cargarEstado}
+                  style={{ padding: '4px 10px', fontSize: '0.78rem' }}
+                  title="Actualizar lista"
+                >
+                  <ArrowPathIcon style={{ width: '13px', height: '13px' }} />
+                  Refrescar
+                </button>
+              </div>
             </div>
 
             <div className="card-body" style={{ padding: 0 }}>
@@ -283,19 +327,39 @@ export const TutorSalaView = () => {
                   <table className="ufps-table">
                     <thead>
                       <tr>
-                        <th>Hora (Colombia)</th>
-                        <th>Estudiante</th>
-                        <th>Código</th>
-                        <th>Materia</th>
-                        <th>Motivo</th>
-                        <th>Firma</th>
+                        <th style={{ width: '50px', textAlign: 'center' }}>N°</th>
+                        <th>Código Materia</th>
+                        <th>Nombre Materia</th>
+                        <th>Nombre y Apellido Estudiante</th>
+                        <th>Código Estudiante</th>
+                        <th>Temas</th>
+                        <th>Fecha y Hora</th>
+                        <th style={{ textAlign: 'center', width: '110px' }}>Firma</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {asistencias.map((a) => (
+                      {asistencias.map((a, idx) => (
                         <tr key={a.id}>
-                          <td style={{ fontSize: '0.82rem', color: '#555', whiteSpace: 'nowrap' }}>
-                            {formatColombiaTime(a.fechaHora)}
+                          <td style={{ textAlign: 'center', fontWeight: 700, color: '#78909C' }}>
+                            {idx + 1}
+                          </td>
+                          <td>
+                            <span
+                              style={{
+                                fontFamily: 'monospace',
+                                backgroundColor: '#E8EAF6',
+                                color: '#1A237E',
+                                padding: '2px 7px',
+                                borderRadius: '3px',
+                                fontSize: '0.82rem',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {a.materiaCodigo || 'N/A'}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: 600, color: '#263238' }}>
+                            {a.materiaNombre || 'Asesoría Académica'}
                           </td>
                           <td style={{ fontWeight: 600 }}>{a.nombreEstudiante}</td>
                           <td>
@@ -311,13 +375,13 @@ export const TutorSalaView = () => {
                               {a.codigoEstudiante}
                             </span>
                           </td>
-                          <td style={{ color: '#0073B7', fontWeight: 500 }}>
-                            {a.materiaNombre || 'Asesoría Académica'}
-                          </td>
-                          <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {a.motivo}
                           </td>
-                          <td>
+                          <td style={{ fontSize: '0.82rem', color: '#555', whiteSpace: 'nowrap' }}>
+                            {formatColombiaDateTime(a.fechaHora)}
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
                             <button
                               className="btn btn-secondary"
                               onClick={() => {

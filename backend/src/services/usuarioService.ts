@@ -1,27 +1,16 @@
 import type { Usuario, CreateUsuarioDTO, UpdateUsuarioDTO } from '../types/index.js';
+import { hashPassword } from '../utils/passwordHash.js';
 
 let inMemoryUsuarios: Usuario[] = [
   {
     id: 'usr-1',
-    nombre: 'Super Administrador',
-    correo: 'admin@ufps.edu.co',
+    nombre: 'Amigo Académico',
+    correo: 'amigoacademicoufps@ufps.edu.co',
+    password: 'admin123',
     tipo: 'SUPER_ADMIN',
+    debeCambiarPassword: false,
     createdAt: new Date().toISOString(),
   },
-  {
-    id: 'usr-2',
-    nombre: 'Carlos Pérez',
-    correo: 'cperez@ufps.edu.co',
-    tipo: 'DIRECTOR',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'usr-3',
-    nombre: 'Ana Gómez',
-    correo: 'agomez@ufps.edu.co',
-    tipo: 'AMIGO_ACADEMICO',
-    createdAt: new Date().toISOString(),
-  }
 ];
 
 export class UsuarioService {
@@ -29,32 +18,63 @@ export class UsuarioService {
 
   constructor(db?: D1Database) {
     this.db = db;
+    if (this.db) {
+      this.db.prepare('ALTER TABLE usuarios ADD COLUMN debe_cambiar_password INTEGER DEFAULT 1').run().catch(() => {});
+    }
   }
 
   async getAll(): Promise<Usuario[]> {
     if (this.db) {
-      const { results } = await this.db.prepare('SELECT id, nombre, correo, tipo, created_at as createdAt, updated_at as updatedAt FROM usuarios ORDER BY created_at DESC').all<Usuario>();
-      return results || [];
+      const { results } = await this.db.prepare(
+        `SELECT id, nombre, correo, tipo,
+                CASE WHEN tipo = 'SUPER_ADMIN' THEN 0 ELSE COALESCE(debe_cambiar_password, 1) END = 1 as debeCambiarPassword,
+                created_at as createdAt, updated_at as updatedAt
+         FROM usuarios
+         ORDER BY created_at DESC`
+      ).all<{ id: string; nombre: string; correo: string; tipo: 'SUPER_ADMIN' | 'DIRECTOR' | 'AMIGO_ACADEMICO'; debeCambiarPassword: number | boolean; createdAt?: string; updatedAt?: string }>();
+
+      return (results || []).map((u) => ({
+        ...u,
+        debeCambiarPassword: Boolean(u.debeCambiarPassword),
+      }));
     }
     return [...inMemoryUsuarios];
   }
 
   async getById(id: string): Promise<Usuario | null> {
     if (this.db) {
-      const result = await this.db.prepare('SELECT id, nombre, correo, tipo, created_at as createdAt, updated_at as updatedAt FROM usuarios WHERE id = ?').bind(id).first<Usuario>();
-      return result || null;
+      const result = await this.db.prepare(
+        `SELECT id, nombre, correo, tipo,
+                CASE WHEN tipo = 'SUPER_ADMIN' THEN 0 ELSE COALESCE(debe_cambiar_password, 1) END = 1 as debeCambiarPassword,
+                created_at as createdAt, updated_at as updatedAt
+         FROM usuarios WHERE id = ?`
+      ).bind(id).first<{ id: string; nombre: string; correo: string; tipo: 'SUPER_ADMIN' | 'DIRECTOR' | 'AMIGO_ACADEMICO'; debeCambiarPassword: number | boolean; createdAt?: string; updatedAt?: string }>();
+
+      if (!result) return null;
+      return {
+        ...result,
+        debeCambiarPassword: Boolean(result.debeCambiarPassword),
+      };
     }
     const found = inMemoryUsuarios.find((u) => u.id === id);
     return found || null;
   }
 
   async create(data: CreateUsuarioDTO): Promise<Usuario> {
+    if (!data.password) {
+      throw new Error('La contraseña es obligatoria');
+    }
+
+    const debeCambiar = data.tipo === 'SUPER_ADMIN' ? false : (data.debeCambiarPassword ?? true);
+    const hashedPassword = await hashPassword(data.password);
+
     const newUsuario: Usuario = {
       id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       nombre: data.nombre,
       correo: data.correo,
-      password: data.password || '123456',
+      password: hashedPassword,
       tipo: data.tipo || 'AMIGO_ACADEMICO',
+      debeCambiarPassword: debeCambiar,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -62,14 +82,15 @@ export class UsuarioService {
     if (this.db) {
       await this.db
         .prepare(
-          'INSERT INTO usuarios (id, nombre, correo, password, tipo, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          'INSERT INTO usuarios (id, nombre, correo, password, tipo, debe_cambiar_password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         )
         .bind(
           newUsuario.id,
           newUsuario.nombre,
           newUsuario.correo,
-          newUsuario.password || '123456',
+          hashedPassword,
           newUsuario.tipo,
+          debeCambiar ? 1 : 0,
           newUsuario.createdAt || null,
           newUsuario.updatedAt || null
         )
@@ -95,7 +116,7 @@ export class UsuarioService {
     };
 
     if (data.password !== undefined) {
-      updated.password = data.password;
+      updated.password = await hashPassword(data.password);
     }
 
     if (this.db) {

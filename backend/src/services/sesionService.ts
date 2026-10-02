@@ -1,10 +1,5 @@
 import type { Sesion, CreateSesionDTO } from '../types/index.js';
 
-// ─────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────
-
-/** Genera un código corto de sala legible (ej: "A3F2") */
 function generarCodigoSala(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let codigo = '';
@@ -22,10 +17,6 @@ function now(): string {
   return new Date().toISOString();
 }
 
-// ─────────────────────────────────────────────────────────────
-// SesionService
-// Gestión de la sesión compartida única de sala
-// ─────────────────────────────────────────────────────────────
 export class SesionService {
   private db: D1Database;
 
@@ -33,10 +24,6 @@ export class SesionService {
     this.db = db;
   }
 
-  /**
-   * Obtiene la sesión activa actual (si existe).
-   * Sólo puede haber una sesión con estado='activa' a la vez.
-   */
   async getActiva(): Promise<Sesion | null> {
     const row = await this.db
       .prepare(
@@ -59,18 +46,12 @@ export class SesionService {
     return { ...row, qrUrl: `/firmar/${row.codigo}` };
   }
 
-  /**
-   * Abre una sesión compartida de sala.
-   * - Si ya hay una sesión activa, la retorna directamente (el tutor se suma).
-   * - Si no hay ninguna activa, crea una nueva con código único.
-   */
   async abrir(data: CreateSesionDTO): Promise<{ sesion: Sesion; creada: boolean }> {
     const activa = await this.getActiva();
     if (activa) {
       return { sesion: activa, creada: false };
     }
 
-    // Generar código único verificando que no exista
     let codigo = generarCodigoSala();
     let intentos = 0;
     while (intentos < 10) {
@@ -113,10 +94,6 @@ export class SesionService {
     return { sesion, creada: true };
   }
 
-  /**
-   * Verifica si el código de QR pertenece a una sesión activa.
-   * Ruta pública usada por el celular del estudiante al escanear.
-   */
   async verificarCodigo(codigo: string): Promise<Sesion | null> {
     const row = await this.db
       .prepare(
@@ -138,9 +115,6 @@ export class SesionService {
     return { ...row, qrUrl: `/firmar/${row.codigo}` };
   }
 
-  /**
-   * Cierra la sesión compartida activa (invalida el QR).
-   */
   async cerrar(id: string): Promise<Sesion | null> {
     const sesion = await this.db
       .prepare(

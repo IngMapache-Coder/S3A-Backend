@@ -11,14 +11,12 @@ import type { Env, Variables } from './types/env.js';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// CORS middleware para permitir llamadas del frontend
 app.use('*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Ruta raíz y API status
 app.get('/', (c) => {
   return c.json({
     message: 'API Backend S3A (Sistema de Asistencia Digital "Amigo Académico") activa',
@@ -44,7 +42,6 @@ app.get('/api', (c) => {
   });
 });
 
-// Montaje de rutas del sistema
 app.route('/auth', auth);
 app.route('/usuarios', usuarios);
 app.route('/materias', materias);

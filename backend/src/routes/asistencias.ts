@@ -1,29 +1,9 @@
 import { Hono } from 'hono';
 import { FirmaService } from '../services/firmaService.js';
 import type { Env, Variables } from '../types/env.js';
-import type { CreateAsistenciaDTO } from '../types/index.js';
 
 const asistencias = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// ─────────────────────────────────────────────────────────────
-// POST /asistencias  — RUTA PÚBLICA
-// El estudiante envía su asistencia desde su celular.
-// No requiere autenticación.
-// ─────────────────────────────────────────────────────────────
-
-/**
- * POST /asistencias
- *
- * Body esperado:
- * {
- *   codigoSesion:     string   — código del QR escaneado
- *   materiaId:        string   — ID de la materia elegida
- *   motivo:           string   — duda, parcial, taller, etc.
- *   nombreEstudiante: string
- *   codigoEstudiante: string   — código institucional
- *   firmaBase64:      string   — imagen de la firma en base64 (data URL o raw)
- * }
- */
 asistencias.post('/', async (c) => {
   try {
     const raw = await c.req.json<Record<string, unknown>>();
@@ -66,7 +46,6 @@ asistencias.post('/', async (c) => {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Error al registrar asistencia';
 
-    // Sesión no válida → 400
     if (msg.includes('no encontrada o ya cerrada')) {
       return c.json({ success: false, error: msg }, 400);
     }

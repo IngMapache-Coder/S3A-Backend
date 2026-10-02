@@ -2,11 +2,6 @@ import type { Context, Next, MiddlewareHandler } from 'hono';
 import type { AuthUserPayload, Role, Variables } from '../types/index.js';
 import type { Env } from '../types/env.js';
 
-// ─────────────────────────────────────────────────────────────
-// JWT mínimo para Cloudflare Workers (sin librerías externas)
-// Cloudflare Workers expone la Web Crypto API nativa.
-// ─────────────────────────────────────────────────────────────
-
 async function importKey(secret: string): Promise<CryptoKey> {
   const enc = new TextEncoder();
   return crypto.subtle.importKey(
@@ -32,13 +27,10 @@ function base64urlEncode(buf: ArrayBuffer): string {
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-/**
- * Genera un JWT firmado con HMAC-SHA256.
- */
 export async function signJWT(
   payload: Record<string, unknown>,
   secret: string,
-  expiresInSeconds = 86400 // 24 horas
+  expiresInSeconds = 86400
 ): Promise<string> {
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
@@ -55,9 +47,6 @@ export async function signJWT(
   return `${signingInput}.${base64urlEncode(sig)}`;
 }
 
-/**
- * Verifica y decodifica un JWT. Lanza error si es inválido o expirado.
- */
 export async function verifyJWT(
   token: string,
   secret: string
@@ -88,14 +77,6 @@ export async function verifyJWT(
   return payload;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Middleware de autenticación — extrae y valida el JWT
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Middleware para verificar el JWT en el header Authorization.
- * Popula c.var.user con los datos del usuario autenticado.
- */
 export async function authMiddleware(
   c: Context<{ Bindings: Env; Variables: Variables }>,
   next: Next
@@ -133,14 +114,6 @@ export async function authMiddleware(
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Guard de roles
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Middleware para restringir el acceso según el rol del usuario.
- * Debe usarse DESPUÉS de authMiddleware.
- */
 export function requireRole(
   ...allowedRoles: Role[]
 ): MiddlewareHandler<{ Bindings: Env; Variables: Variables }> {

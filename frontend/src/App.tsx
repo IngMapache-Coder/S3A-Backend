@@ -8,6 +8,7 @@ import { TutoresView } from './views/TutoresView.js';
 import { MateriasView } from './views/MateriasView.js';
 import { ReportesView } from './views/ReportesView.js';
 import { PerfilView } from './views/PerfilView.js';
+import { CambioPasswordObligatorio } from './components/CambioPasswordObligatorio.js';
 import { authStorage, type User } from './api/client.js';
 
 export const App: React.FC = () => {
@@ -92,6 +93,16 @@ export const App: React.FC = () => {
     );
   }
 
+  if (user.debeCambiarPassword && (user.tipo === 'AMIGO_ACADEMICO' || user.tipo === 'DIRECTOR')) {
+    return (
+      <CambioPasswordObligatorio
+        user={user}
+        onSuccess={(updatedUser) => setUser(updatedUser)}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
       <Navbar
@@ -120,7 +131,7 @@ export const App: React.FC = () => {
               onVolver={() => setActiveTab('sala')}
             />
           )}
-          {activeTab === 'tutores' && <TutoresView />}
+          {activeTab === 'tutores' && <TutoresView currentUser={user} />}
           {activeTab === 'materias' && <MateriasView />}
           {activeTab === 'reportes' && <ReportesView />}
           {activeTab === 'perfil' && <PerfilView user={user} />}

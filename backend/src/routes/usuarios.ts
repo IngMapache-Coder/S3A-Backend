@@ -6,20 +6,14 @@ import type { CreateUsuarioDTO, UpdateUsuarioDTO } from '../types/index.js';
 
 const usuarios = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// Todas las rutas requieren autenticación
 usuarios.use('*', authMiddleware);
 
-// ─────────────────────────────────────────────────────────────
-// GET /usuarios — Listar todos los usuarios
-// Solo SUPER_ADMIN y DIRECTOR
-// ─────────────────────────────────────────────────────────────
 usuarios.get('/', requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   try {
     const { tipo } = c.req.query();
     const usuarioService = new UsuarioService(c.env.DB);
     let list = await usuarioService.getAll();
 
-    // El Director filtra por tipo si lo desea (útil para ver solo AMIGO_ACADEMICO)
     if (tipo) {
       list = list.filter((u) => u.tipo === tipo);
     }
@@ -31,9 +25,6 @@ usuarios.get('/', requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// GET /usuarios/:id — Obtener un usuario por ID
-// ─────────────────────────────────────────────────────────────
 usuarios.get('/:id', requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   try {
     const id = c.req.param('id');
@@ -51,11 +42,6 @@ usuarios.get('/:id', requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// POST /usuarios — Crear un nuevo usuario
-// SUPER_ADMIN puede crear cualquier rol.
-// DIRECTOR puede crear solo AMIGO_ACADEMICO (regla de negocio).
-// ─────────────────────────────────────────────────────────────
 usuarios.post('/', requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   try {
     const caller = c.get('user')!;
@@ -68,7 +54,6 @@ usuarios.post('/', requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
       );
     }
 
-    // Un Director solo puede crear Amigos Académicos
     if (caller.tipo === 'DIRECTOR' && body.tipo !== 'AMIGO_ACADEMICO') {
       return c.json(
         { success: false, error: 'Un Director solo puede crear cuentas de tipo AMIGO_ACADEMICO' },
@@ -86,10 +71,6 @@ usuarios.post('/', requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// PUT /usuarios/:id — Actualizar un usuario
-// Solo SUPER_ADMIN
-// ─────────────────────────────────────────────────────────────
 usuarios.put('/:id', requireRole('SUPER_ADMIN'), async (c) => {
   try {
     const id = c.req.param('id');
@@ -108,10 +89,6 @@ usuarios.put('/:id', requireRole('SUPER_ADMIN'), async (c) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// DELETE /usuarios/:id — Eliminar un usuario
-// Solo SUPER_ADMIN
-// ─────────────────────────────────────────────────────────────
 usuarios.delete('/:id', requireRole('SUPER_ADMIN'), async (c) => {
   try {
     const id = c.req.param('id');

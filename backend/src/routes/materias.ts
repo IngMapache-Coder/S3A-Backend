@@ -6,12 +6,6 @@ import type { CreateMateriaDTO, UpdateMateriaDTO } from '../types/index.js';
 
 const materias = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// ─────────────────────────────────────────────────────────────
-// Rutas PÚBLICAS
-// Buscador dinámico de materias por el estudiante o paneles
-// ─────────────────────────────────────────────────────────────
-
-// GET /materias - Obtener todas las materias (código y nombre)
 materias.get('/', async (c) => {
   try {
     const materiaService = new MateriaService(c.env.DB);
@@ -23,7 +17,6 @@ materias.get('/', async (c) => {
   }
 });
 
-// GET /materias/:id - Obtener una materia por ID
 materias.get('/:id', async (c) => {
   try {
     const id = c.req.param('id');
@@ -41,11 +34,6 @@ materias.get('/:id', async (c) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// Rutas PROTEGIDAS (SUPER_ADMIN y DIRECTOR)
-// ─────────────────────────────────────────────────────────────
-
-// POST /materias - Crear una nueva materia
 materias.post('/', authMiddleware, requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   try {
     const body = await c.req.json<CreateMateriaDTO>();
@@ -70,7 +58,6 @@ materias.post('/', authMiddleware, requireRole('SUPER_ADMIN', 'DIRECTOR'), async
   }
 });
 
-// PUT /materias/:id - Actualizar una materia
 materias.put('/:id', authMiddleware, requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   try {
     const id = c.req.param('id');
@@ -89,7 +76,6 @@ materias.put('/:id', authMiddleware, requireRole('SUPER_ADMIN', 'DIRECTOR'), asy
   }
 });
 
-// DELETE /materias/:id - Eliminar una materia
 materias.delete('/:id', authMiddleware, requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   try {
     const id = c.req.param('id');
