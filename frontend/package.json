@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && ../backend/node_modules/.bin/wrangler pages deploy dist --project-name s3a-frontend --branch main"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
