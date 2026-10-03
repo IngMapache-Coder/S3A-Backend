@@ -190,7 +190,7 @@ export const api = {
   firmas: {
     getUrl: (asistenciaId: string) => {
       const token = authStorage.getToken();
-      return `/firmas/${asistenciaId}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+      return `${API_BASE}/firmas/${asistenciaId}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
     },
   },
 };

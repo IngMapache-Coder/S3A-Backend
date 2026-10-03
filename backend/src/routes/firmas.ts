@@ -18,11 +18,9 @@ firmas.get('/:asistenciaId', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUPER_A
     }
 
     const body = await obj.arrayBuffer();
-    return new Response(body, {
-      headers: {
-        'Content-Type': obj.httpMetadata?.contentType ?? 'image/webp',
-        'Cache-Control': 'private, max-age=3600',
-      },
+    return c.body(body, 200, {
+      'Content-Type': obj.httpMetadata?.contentType ?? 'image/webp',
+      'Cache-Control': 'private, max-age=3600',
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Error al obtener la firma';
