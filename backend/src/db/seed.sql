@@ -48,3 +48,28 @@ INSERT INTO usuarios (id, nombre, correo, password, tipo, debe_cambiar_password,
     '2026-10-08T14:13:53.689Z'
   );
 
+-- ========================================================
+-- SEED: Materias de prueba
+-- ========================================================
+
+INSERT INTO materias (id, codigo, nombre, created_at, updated_at) VALUES
+  ('mat-seed-001', 'MAT-101', 'Cálculo Diferencial',             '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-002', 'MAT-102', 'Cálculo Integral',                '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-003', 'MAT-201', 'Álgebra Lineal',                  '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-004', 'MAT-202', 'Cálculo Vectorial',               '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-005', 'MAT-301', 'Ecuaciones Diferenciales',        '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-006', 'SIS-101', 'Fundamentos de Programación',     '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-007', 'SIS-102', 'Programación Orientada a Objetos','2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-008', 'SIS-201', 'Estructuras de Datos',            '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-009', 'SIS-202', 'Bases de Datos I',                '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-010', 'SIS-203', 'Bases de Datos II',               '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-011', 'SIS-301', 'Análisis de Algoritmos',          '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-012', 'SIS-302', 'Ingeniería de Software I',        '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-013', 'SIS-303', 'Ingeniería de Software II',       '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-014', 'SIS-401', 'Redes de Computadores',           '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-015', 'SIS-402', 'Sistemas Operativos',             '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-016', 'FIS-101', 'Física Mecánica',                 '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-017', 'FIS-102', 'Física Eléctrica',                '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-018', 'HUM-101', 'Ética Profesional',               '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-019', 'EST-101', 'Probabilidad y Estadística',      '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z'),
+  ('mat-seed-020', 'SIS-501', 'Proyecto de Grado',               '2026-10-08T14:13:54.000Z', '2026-10-08T14:13:54.000Z');
