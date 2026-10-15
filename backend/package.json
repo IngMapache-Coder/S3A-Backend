@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 execute db-sd3-d1 --local --file=./src/db/schema.sql",
     "db:migrate:remote": "wrangler d1 execute db-sd3-d1 --remote --file=./src/db/schema.sql",
+    "db:seed:local": "wrangler d1 execute db-sd3-d1 --local --file=./src/db/seed.sql",
+    "db:seed:remote": "wrangler d1 execute db-sd3-d1 --remote --file=./src/db/seed.sql",
     "db:reset:local": "wrangler d1 execute db-sd3-d1 --local --file=./src/db/reset.sql",
     "db:reset:remote": "wrangler d1 execute db-sd3-d1 --remote --file=./src/db/reset.sql"
   },

@@ -202,3 +202,33 @@ erDiagram
    - `sesionService.ts` y `sesiones.ts`: Lógica de sesión compartida única (`abrir`, `activa`, `verificar`, `cerrar`).
    - `asistenciaService.ts` y `asistencias.ts`: Formulario público, subida a R2 y registro en D1.
    - `auth.ts`: Login con JWT y permisos para que los directores creen amigos académicos.
+
+---
+
+## 8. Usuarios de Prueba (Seed Inicial — D1)
+
+> [!IMPORTANT]
+> Estas credenciales están insertadas en la base de datos D1 mediante `backend/src/db/seed.sql`.
+> Las contraseñas se almacenan en formato **PBKDF2-SHA256** con 100.000 iteraciones, usando la misma lógica de `backend/src/utils/passwordHash.ts`.
+
+| Rol | Nombre | Correo | Contraseña | `debe_cambiar_password` |
+|---|---|---|---|---|
+| `SUPER_ADMIN` | Super Admin | `admin@s3a.edu.co` | `Admin2025!` | `false` |
+| `DIRECTOR` | Director de Programa | `director@s3a.edu.co` | `Director2025!` | `false` |
+| `AMIGO_ACADEMICO` | Amigo Académico Prueba | `amigo@s3a.edu.co` | `Amigo2025!` | `false` |
+
+### Cómo regenerar / aplicar el seed
+
+```bash
+# Aplicar a la BD LOCAL (desarrollo con wrangler dev):
+cd backend
+npx wrangler d1 execute db-sd3-d1 --local --file=./src/db/seed.sql
+
+# Aplicar a la BD REMOTA (Cloudflare D1 en producción):
+cd backend
+npx wrangler d1 execute db-sd3-d1 --remote --file=./src/db/seed.sql
+```
+
+> [!CAUTION]
+> Si los IDs `usr-seed-001`, `usr-seed-002`, `usr-seed-003` ya existen en la BD, el INSERT fallará con un error de PRIMARY KEY.
+> En ese caso borra previamente los registros o usa el script de reset antes de aplicar el seed.
