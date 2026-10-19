@@ -27,7 +27,7 @@ export class UsuarioService {
     if (this.db) {
       const { results } = await this.db.prepare(
         `SELECT id, nombre, correo, tipo,
-                CASE WHEN tipo = 'SUPER_ADMIN' THEN 0 ELSE COALESCE(debe_cambiar_password, 1) END = 1 as debeCambiarPassword,
+                COALESCE(debe_cambiar_password, 1) = 1 as debeCambiarPassword,
                 created_at as createdAt, updated_at as updatedAt
          FROM usuarios
          ORDER BY created_at DESC`
@@ -45,7 +45,7 @@ export class UsuarioService {
     if (this.db) {
       const result = await this.db.prepare(
         `SELECT id, nombre, correo, tipo,
-                CASE WHEN tipo = 'SUPER_ADMIN' THEN 0 ELSE COALESCE(debe_cambiar_password, 1) END = 1 as debeCambiarPassword,
+                COALESCE(debe_cambiar_password, 1) = 1 as debeCambiarPassword,
                 created_at as createdAt, updated_at as updatedAt
          FROM usuarios WHERE id = ?`
       ).bind(id).first<{ id: string; nombre: string; correo: string; tipo: 'SUPER_ADMIN' | 'DIRECTOR' | 'AMIGO_ACADEMICO'; debeCambiarPassword: number | boolean; createdAt?: string; updatedAt?: string }>();
@@ -65,7 +65,7 @@ export class UsuarioService {
       throw new Error('La contraseña es obligatoria');
     }
 
-    const debeCambiar = data.tipo === 'SUPER_ADMIN' ? false : (data.debeCambiarPassword ?? true);
+    const debeCambiar = data.debeCambiarPassword ?? true;
     const hashedPassword = await hashPassword(data.password);
 
     const newUsuario: Usuario = {

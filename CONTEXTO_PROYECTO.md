@@ -205,30 +205,32 @@ erDiagram
 
 ---
 
-## 8. Usuarios de Prueba (Seed Inicial — D1)
+## 8. Usuarios Iniciales (Seed — D1)
 
 > [!IMPORTANT]
-> Estas credenciales están insertadas en la base de datos D1 mediante `backend/src/db/seed.sql`.
-> Las contraseñas se almacenan en formato **PBKDF2-SHA256** con 100.000 iteraciones, usando la misma lógica de `backend/src/utils/passwordHash.ts`.
+> Credenciales insertadas mediante `backend/src/db/seed.sql`.
+> Contraseñas hasheadas con **PBKDF2-SHA256, 100.000 iteraciones** (ver `backend/src/utils/passwordHash.ts`).
+> **Todos los usuarios deben cambiar su contraseña en el primer ingreso** (`debe_cambiar_password = 1`).
 
-| Rol | Nombre | Correo | Contraseña | `debe_cambiar_password` |
-|---|---|---|---|---|
-| `SUPER_ADMIN` | Super Admin | `admin@s3a.edu.co` | `Admin2025!` | `false` |
-| `DIRECTOR` | Director de Programa | `director@s3a.edu.co` | `Director2025!` | `false` |
-| `AMIGO_ACADEMICO` | Amigo Académico Prueba | `amigo@s3a.edu.co` | `Amigo2025!` | `false` |
+| Rol | Nombre | Correo | Contraseña temporal |
+|---|---|---|---|
+| `SUPER_ADMIN` | Marco Antonio Adarme Jaimes | `madarme@ufps.edu.co` | `Ufps@Temporal2026` |
+| `AMIGO_ACADEMICO` | Jesus Daniel Lozano Erazo | `jesusdanielle@ufps.edu.co` | `Ufps@Temporal2026` |
+| `AMIGO_ACADEMICO` | Laura Isabella Correa Nieto | `lauraisabellacn@ufps.edu.co` | `Ufps@Temporal2026` |
 
-### Cómo regenerar / aplicar el seed
+### Cómo aplicar el seed (desde `backend/`)
 
 ```bash
-# Aplicar a la BD LOCAL (desarrollo con wrangler dev):
-cd backend
-npx wrangler d1 execute db-sd3-d1 --local --file=./src/db/seed.sql
+# Flujo completo desde cero (reset → migrate → seed):
+npm run db:reset:local
+npm run db:migrate:local
+npm run db:seed:local
 
-# Aplicar a la BD REMOTA (Cloudflare D1 en producción):
-cd backend
-npx wrangler d1 execute db-sd3-d1 --remote --file=./src/db/seed.sql
+# Solo seed (si las tablas ya existen y están vacías):
+npm run db:seed:local   # local
+npm run db:seed:remote  # remoto (Cloudflare D1)
 ```
 
 > [!CAUTION]
-> Si los IDs `usr-seed-001`, `usr-seed-002`, `usr-seed-003` ya existen en la BD, el INSERT fallará con un error de PRIMARY KEY.
-> En ese caso borra previamente los registros o usa el script de reset antes de aplicar el seed.
+> Si los IDs `usr-001`, `usr-002`, `usr-003` ya existen en la BD, el INSERT fallará con error de PRIMARY KEY.
+> Ejecuta `db:reset:local` primero para limpiar.
