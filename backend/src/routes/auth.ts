@@ -21,7 +21,7 @@ auth.post('/login', async (c) => {
     const usuario = await c.env.DB
       .prepare(
         `SELECT id, nombre, correo, password, tipo,
-                CASE WHEN tipo = 'SUPER_ADMIN' THEN 0 ELSE COALESCE(debe_cambiar_password, 1) END as debe_cambiar_password
+                COALESCE(debe_cambiar_password, 1) as debe_cambiar_password
          FROM usuarios
          WHERE correo = ?`
       )
@@ -37,7 +37,7 @@ auth.post('/login', async (c) => {
       return c.json({ success: false, error: 'Credenciales inválidas' }, 401);
     }
 
-    const debeCambiar = usuario.tipo === 'SUPER_ADMIN' ? false : Boolean(usuario.debe_cambiar_password);
+    const debeCambiar = Boolean(usuario.debe_cambiar_password);
 
     const token = await signJWT(
       {
@@ -73,14 +73,14 @@ auth.get('/me', authMiddleware, async (c) => {
     const row = await c.env.DB
       .prepare(
         `SELECT id, nombre, correo, tipo,
-                CASE WHEN tipo = 'SUPER_ADMIN' THEN 0 ELSE COALESCE(debe_cambiar_password, 1) END as debe_cambiar_password
+                COALESCE(debe_cambiar_password, 1) as debe_cambiar_password
          FROM usuarios WHERE id = ?`
       )
       .bind(tokenUser.id)
       .first<{ id: string; nombre: string; correo: string; tipo: 'SUPER_ADMIN' | 'DIRECTOR' | 'AMIGO_ACADEMICO'; debe_cambiar_password: number }>();
 
     if (row) {
-      const debeCambiar = row.tipo === 'SUPER_ADMIN' ? false : Boolean(row.debe_cambiar_password);
+      const debeCambiar = Boolean(row.debe_cambiar_password);
       return c.json({
         success: true,
         user: {

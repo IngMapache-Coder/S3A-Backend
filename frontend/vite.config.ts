@@ -6,13 +6,13 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/auth': 'http://localhost:8787',
-      '/usuarios': 'http://localhost:8787',
-      '/materias': 'http://localhost:8787',
-      '/sesiones': 'http://localhost:8787',
-      '/asistencias': 'http://localhost:8787',
-      '/firmas': 'http://localhost:8787',
-      '/reportes': 'http://localhost:8787',
+      '/auth':        { target: 'http://localhost:8787', changeOrigin: true },
+      '/usuarios':    { target: 'http://localhost:8787', changeOrigin: true },
+      '/materias':    { target: 'http://localhost:8787', changeOrigin: true },
+      '/sesiones':    { target: 'http://localhost:8787', changeOrigin: true },
+      '/asistencias': { target: 'http://localhost:8787', changeOrigin: true },
+      '/firmas':      { target: 'http://localhost:8787', changeOrigin: true },
+      '/reportes':    { target: 'http://localhost:8787', changeOrigin: true },
     },
   },
 });
