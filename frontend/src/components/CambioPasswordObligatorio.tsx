@@ -80,7 +80,12 @@ export const CambioPasswordObligatorio: React.FC<CambioPasswordObligatorioProps>
     }
   };
 
-  const rolNombre = user.tipo === 'DIRECTOR' ? 'Director de Programa' : 'Amigo Académico';
+  const rolNombre =
+    user.tipo === 'SUPER_ADMIN'
+      ? 'Super Administrador'
+      : user.tipo === 'DIRECTOR'
+      ? 'Director de Programa'
+      : 'Amigo Académico';
 
   return (
     <div

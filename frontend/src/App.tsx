@@ -93,7 +93,7 @@ export const App: React.FC = () => {
     );
   }
 
-  if (user.debeCambiarPassword && (user.tipo === 'AMIGO_ACADEMICO' || user.tipo === 'DIRECTOR')) {
+  if (user.debeCambiarPassword) {
     return (
       <CambioPasswordObligatorio
         user={user}
