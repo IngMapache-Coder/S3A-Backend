@@ -1,25 +1,26 @@
 import { Hono } from 'hono';
 import { MateriaService } from '../services/materiaService.js';
+import { authMiddleware, requireRole } from '../middlewares/auth.js';
+import type { Env, Variables } from '../types/env.js';
 import type { CreateMateriaDTO, UpdateMateriaDTO } from '../types/index.js';
 
-const materias = new Hono<{ Bindings: { DB?: D1Database } }>();
+const materias = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// GET /materias - Obtener todas las materias (código y nombre)
 materias.get('/', async (c) => {
   try {
-    const materiaService = new MateriaService(c.env?.DB);
+    const materiaService = new MateriaService(c.env.DB);
     const list = await materiaService.getAll();
     return c.json({ success: true, data: list, count: list.length });
-  } catch (error: any) {
-    return c.json({ success: false, error: error.message || 'Error al obtener materias' }, 500);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Error al obtener materias';
+    return c.json({ success: false, error: msg }, 500);
   }
 });
 
-// GET /materias/:id - Obtener una materia por ID
 materias.get('/:id', async (c) => {
   try {
     const id = c.req.param('id');
-    const materiaService = new MateriaService(c.env?.DB);
+    const materiaService = new MateriaService(c.env.DB);
     const materia = await materiaService.getById(id);
 
     if (!materia) {
@@ -27,13 +28,13 @@ materias.get('/:id', async (c) => {
     }
 
     return c.json({ success: true, data: materia });
-  } catch (error: any) {
-    return c.json({ success: false, error: error.message || 'Error al obtener la materia' }, 500);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Error al obtener la materia';
+    return c.json({ success: false, error: msg }, 500);
   }
 });
 
-// POST /materias - Crear una nueva materia (requiere código y nombre)
-materias.post('/', async (c) => {
+materias.post('/', authMiddleware, requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   try {
     const body = await c.req.json<CreateMateriaDTO>();
 
@@ -47,21 +48,21 @@ materias.post('/', async (c) => {
       );
     }
 
-    const materiaService = new MateriaService(c.env?.DB);
+    const materiaService = new MateriaService(c.env.DB);
     const newMateria = await materiaService.create(body);
 
     return c.json({ success: true, data: newMateria, message: 'Materia creada exitosamente' }, 201);
-  } catch (error: any) {
-    return c.json({ success: false, error: error.message || 'Error al crear la materia' }, 500);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Error al crear la materia';
+    return c.json({ success: false, error: msg }, 500);
   }
 });
 
-// PUT /materias/:id - Actualizar una materia
-materias.put('/:id', async (c) => {
+materias.put('/:id', authMiddleware, requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   try {
     const id = c.req.param('id');
     const body = await c.req.json<UpdateMateriaDTO>();
-    const materiaService = new MateriaService(c.env?.DB);
+    const materiaService = new MateriaService(c.env.DB);
 
     const updated = await materiaService.update(id, body);
     if (!updated) {
@@ -69,16 +70,16 @@ materias.put('/:id', async (c) => {
     }
 
     return c.json({ success: true, data: updated, message: 'Materia actualizada exitosamente' });
-  } catch (error: any) {
-    return c.json({ success: false, error: error.message || 'Error al actualizar la materia' }, 500);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Error al actualizar la materia';
+    return c.json({ success: false, error: msg }, 500);
   }
 });
 
-// DELETE /materias/:id - Eliminar una materia
-materias.delete('/:id', async (c) => {
+materias.delete('/:id', authMiddleware, requireRole('SUPER_ADMIN', 'DIRECTOR'), async (c) => {
   try {
     const id = c.req.param('id');
-    const materiaService = new MateriaService(c.env?.DB);
+    const materiaService = new MateriaService(c.env.DB);
 
     const deleted = await materiaService.delete(id);
     if (!deleted) {
@@ -86,8 +87,9 @@ materias.delete('/:id', async (c) => {
     }
 
     return c.json({ success: true, message: 'Materia eliminada exitosamente' });
-  } catch (error: any) {
-    return c.json({ success: false, error: error.message || 'Error al eliminar la materia' }, 500);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Error al eliminar la materia';
+    return c.json({ success: false, error: msg }, 500);
   }
 });
 

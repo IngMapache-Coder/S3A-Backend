@@ -1,0 +1,10 @@
+{
+  "name": "s3a",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "pnpm --filter backend run dev",
+    "dev:frontend": "pnpm --filter frontend run dev",
+    "build": "pnpm --filter backend run typecheck && pnpm --filter frontend run build"
+  }
+}

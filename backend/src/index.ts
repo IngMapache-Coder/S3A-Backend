@@ -1,26 +1,34 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import materias from './routes/materias.js';
+import auth from './routes/auth.js';
 import usuarios from './routes/usuarios.js';
+import materias from './routes/materias.js';
+import sesiones from './routes/sesiones.js';
+import asistencias from './routes/asistencias.js';
+import firmas from './routes/firmas.js';
+import reportes from './routes/reportes.js';
+import type { Env, Variables } from './types/env.js';
 
-const app = new Hono();
+const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// CORS middleware para permitir llamadas del frontend
 app.use('*', cors({
   origin: '*',
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-User-Role', 'X-User-Email', 'X-User-Id'],
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Ruta raíz y API Root
 app.get('/', (c) => {
   return c.json({
-    message: '🚀 API Backend S3A activa y conectada con Hono',
+    message: 'API Backend S3A (Sistema de Asistencia Digital "Amigo Académico") activa',
     version: '1.0.0',
     endpoints: {
-      materias: '/materias',
+      auth: '/auth',
       usuarios: '/usuarios',
-      status: '/api'
+      materias: '/materias',
+      sesiones: '/sesiones',
+      asistencias: '/asistencias',
+      firmas: '/firmas',
+      reportes: '/reportes',
     }
   });
 });
@@ -30,12 +38,16 @@ app.get('/api', (c) => {
     name: 'S3A API Backend',
     version: '1.0.0',
     status: 'Online',
-    endpoints: ['/materias', '/usuarios'],
+    endpoints: ['/auth', '/usuarios', '/materias', '/sesiones', '/asistencias', '/firmas', '/reportes'],
   });
 });
 
-// Rutas principales
-app.route('/materias', materias);
+app.route('/auth', auth);
 app.route('/usuarios', usuarios);
+app.route('/materias', materias);
+app.route('/sesiones', sesiones);
+app.route('/asistencias', asistencias);
+app.route('/firmas', firmas);
+app.route('/reportes', reportes);
 
 export default app;
