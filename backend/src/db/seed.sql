@@ -21,23 +21,6 @@ INSERT INTO usuarios (id, nombre, correo, password, tipo, debe_cambiar_password,
     '2026-10-19T20:07:00.000Z'
   );
 
--- ========================================================
--- SEED: Materias del programa Ingeniería de Sistemas
--- ========================================================
-
-INSERT INTO materias (id, codigo, nombre, created_at, updated_at) VALUES
-  ('mat-001', '1154101', 'Cálculo Diferencial',                   '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-002', '1154201', 'Cálculo Integral',                      '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-003', '1154301', 'Cálculo Vectorial',                     '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-004', '1154202', 'Álgebra Lineal',                        '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-005', '1154305', 'Matemáticas Discretas',                 '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-006', '1154203', 'Física Mecánica',                       '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-007', '1154303', 'Física Electromagnética',               '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-008', '1154104', 'Fundamentos de Programación',           '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-009', '1154204', 'Programación Orientada a Objetos',      '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-010', '1154304', 'Estructura de Datos',                   '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-011', '1154105', 'Introducción a la Ingeniería de Sistemas','2026-10-20T19:12:00.000Z','2026-10-20T19:12:00.000Z');
-
 -- AMIGO_ACADEMICO: Jesus Daniel Lozano Erazo
 INSERT INTO usuarios (id, nombre, correo, password, tipo, debe_cambiar_password, created_at, updated_at)
   VALUES (
@@ -50,23 +33,6 @@ INSERT INTO usuarios (id, nombre, correo, password, tipo, debe_cambiar_password,
     '2026-10-19T20:07:00.000Z',
     '2026-10-19T20:07:00.000Z'
   );
-
--- ========================================================
--- SEED: Materias del programa Ingeniería de Sistemas
--- ========================================================
-
-INSERT INTO materias (id, codigo, nombre, created_at, updated_at) VALUES
-  ('mat-001', '1154101', 'Cálculo Diferencial',                   '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-002', '1154201', 'Cálculo Integral',                      '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-003', '1154301', 'Cálculo Vectorial',                     '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-004', '1154202', 'Álgebra Lineal',                        '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-005', '1154305', 'Matemáticas Discretas',                 '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-006', '1154203', 'Física Mecánica',                       '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-007', '1154303', 'Física Electromagnética',               '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-008', '1154104', 'Fundamentos de Programación',           '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-009', '1154204', 'Programación Orientada a Objetos',      '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-010', '1154304', 'Estructura de Datos',                   '2026-10-20T19:12:00.000Z', '2026-10-20T19:12:00.000Z'),
-  ('mat-011', '1154105', 'Introducción a la Ingeniería de Sistemas','2026-10-20T19:12:00.000Z','2026-10-20T19:12:00.000Z');
 
 -- AMIGO_ACADEMICO: Laura Isabella Correa Nieto
 INSERT INTO usuarios (id, nombre, correo, password, tipo, debe_cambiar_password, created_at, updated_at)
