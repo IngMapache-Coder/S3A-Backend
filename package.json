@@ -1,10 +1,26 @@
 {
-  "name": "s3a",
-  "version": "1.0.0",
+  "name": "backend",
+  "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev:backend": "pnpm --filter backend run dev",
-    "dev:frontend": "pnpm --filter frontend run dev",
-    "build": "pnpm --filter backend run typecheck && pnpm --filter frontend run build"
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "db:migrate:local": "wrangler d1 execute db-sd3-d1 --local --file=./src/db/schema.sql",
+    "db:migrate:remote": "wrangler d1 execute db-sd3-d1 --remote --file=./src/db/schema.sql",
+    "db:seed:local": "wrangler d1 execute db-sd3-d1 --local --file=./src/db/seed.sql",
+    "db:seed:remote": "wrangler d1 execute db-sd3-d1 --remote --file=./src/db/seed.sql",
+    "db:reset:local": "wrangler d1 execute db-sd3-d1 --local --file=./src/db/reset.sql",
+    "db:reset:remote": "wrangler d1 execute db-sd3-d1 --remote --file=./src/db/reset.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260929.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.143.1"
+  },
+  "dependencies": {
+    "hono": "^4.13.11"
   }
 }

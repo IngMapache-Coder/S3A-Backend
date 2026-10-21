@@ -1,25 +1,19 @@
 # Dependencies
 node_modules/
 .pnpm-store/
-jspm_packages/
-web_modules/
 
-# Production / Build outputs
+# Build & Cloudflare outputs
 dist/
-dist-ssr/
-build/
-out/
-*.tsbuildinfo
-
-# Cloudflare Wrangler & Serverless
 .wrangler/
-.dev.vars*
-!.dev.vars.example
 
 # Environment variables & secrets
-.env
-.env.*
+.dev.vars*
+!.dev.vars.example
+.env*
 !.env.example
+
+# TypeScript cache
+*.tsbuildinfo
 
 # Logs
 logs/
@@ -28,36 +22,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-# Editor & IDE directories
+# Editor & OS files
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*.swo
-*.swp
-
-# OS generated files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Testing & Coverage
-coverage/
-.nyc_output/
-
-# Cache directories
-.cache/
-.parcel-cache/
-.eslintcache
-.stylelintcache
