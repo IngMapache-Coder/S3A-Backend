@@ -30,3 +30,6 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Workspace / local pnpm configuration
+pnpm-workspace.yaml
