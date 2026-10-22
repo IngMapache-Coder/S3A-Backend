@@ -7,6 +7,7 @@ import sesiones from './routes/sesiones.js';
 import asistencias from './routes/asistencias.js';
 import firmas from './routes/firmas.js';
 import reportes from './routes/reportes.js';
+import eventos from './routes/eventos.js';
 import type { Env, Variables } from './types/env.js';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -29,6 +30,7 @@ app.get('/', (c) => {
       asistencias: '/asistencias',
       firmas: '/firmas',
       reportes: '/reportes',
+      eventos: '/eventos',
     }
   });
 });
@@ -38,7 +40,7 @@ app.get('/api', (c) => {
     name: 'S3A API Backend',
     version: '1.0.0',
     status: 'Online',
-    endpoints: ['/auth', '/usuarios', '/materias', '/sesiones', '/asistencias', '/firmas', '/reportes'],
+    endpoints: ['/auth', '/usuarios', '/materias', '/sesiones', '/asistencias', '/firmas', '/reportes', '/eventos'],
   });
 });
 
@@ -49,5 +51,6 @@ app.route('/sesiones', sesiones);
 app.route('/asistencias', asistencias);
 app.route('/firmas', firmas);
 app.route('/reportes', reportes);
+app.route('/eventos', eventos);
 
 export default app;

@@ -150,13 +150,43 @@ erDiagram
         string firma_url "Ruta en Cloudflare R2"
         datetime fecha_hora "CURRENT_TIMESTAMP automático de la BD"
     }
+
+    EVENTOS ||--o{ ASISTENCIAS_EVENTOS : "agrupa"
+    USUARIOS ||--o{ EVENTOS : "creado_por"
+
+    EVENTOS {
+        string id PK
+        string codigo UK "Código para QR y enlace (ej: EVT-PYTHON)"
+        string nombre "Nombre del evento/curso"
+        string descripcion
+        string lugar
+        string facilitador
+        string creada_por_id FK
+        string estado "activa | cerrada"
+        datetime fecha_inicio
+        datetime fecha_cierre
+        datetime created_at
+        datetime updated_at
+    }
+
+    ASISTENCIAS_EVENTOS {
+        string id PK
+        string evento_id FK
+        string nombre_estudiante
+        string codigo_estudiante
+        string correo_estudiante
+        string firma_url "Ruta en Cloudflare R2"
+        datetime fecha_hora "CURRENT_TIMESTAMP automático de la BD"
+    }
 ```
 
 ### Reglas Clave del Modelo:
 1. **`asistencias` NO tiene `amigo_academico_id`**: La atención es grupal/institucional de sala.
 2. **`sesiones.codigo` es único y compartido**: Identifica la jornada de atención activa para todos los tutores de turno.
-3. **`asistencias.fecha_hora` automática**: `DEFAULT CURRENT_TIMESTAMP` para auditoría fidedigna.
-4. **Almacenamiento de firmas**: Bucket de Cloudflare R2 (`db-sd3-r2`).
+3. **`eventos` permite múltiples eventos simultáneos**: Cada evento tiene su propio código QR único e independiente.
+4. **En eventos, el estudiante NO debe elegir evento ni materia**: El QR ya identifica de forma unívoca el evento. Solo ingresa nombre, código/identificación, correo y su firma manuscrita.
+5. **`asistencias.fecha_hora` automática**: `DEFAULT CURRENT_TIMESTAMP` para auditoría fidedigna.
+6. **Almacenamiento de firmas**: Bucket de Cloudflare R2 (`db-sd3-r2`).
 
 ---
 
@@ -180,12 +210,24 @@ erDiagram
 - `GET /sesiones/:id/asistencias` → Retorna la lista en vivo de estudiantes registrados en la sesión.
 - `PATCH /sesiones/:id/cerrar` → Finaliza la sesión compartida (invalida el QR).
 
-### 6.4 Registro de Asistencias del Estudiante (`/asistencias`)
+### 6.4 Eventos y Cursos (`/eventos`)
+- `GET /eventos/verificar/:codigo` → **Público**: Valida que el evento del QR exista y esté activo.
+- `POST /eventos/asistencias` → **Público**: Registra la asistencia del estudiante al evento (`codigoEvento`, `nombreEstudiante`, `codigoEstudiante`, `correoEstudiante`, `firmaBase64`) guardando la firma en R2.
+- `GET /eventos` → Lista todos los eventos creados con su conteo de asistentes (`AMIGO_ACADEMICO`, `DIRECTOR`, `SUPER_ADMIN`).
+- `POST /eventos` → Crea un nuevo evento con código QR único (`AMIGO_ACADEMICO`, `DIRECTOR`, `SUPER_ADMIN`).
+- `GET /eventos/:id` → Consulta detalle de un evento.
+- `PUT /eventos/:id` → Modifica datos del evento.
+- `PATCH /eventos/:id/cerrar` → Finaliza el evento (invalida el QR para nuevas firmas).
+- `PATCH /eventos/:id/reabrir` → Reactiva el evento.
+- `DELETE /eventos/:id` → Elimina el evento y sus asistencias asociadas.
+- `GET /eventos/:id/asistencias` → Consulta en vivo de los asistentes registrados al evento.
+
+### 6.5 Registro de Asistencias del Estudiante (`/asistencias` y `/firmas`)
 - `POST /asistencias` → **Público**:
   - Parámetros: `codigo_sesion`, `materia_id`, `motivo`, `nombre_estudiante`, `codigo_estudiante`, `firma_base64`.
   - Guarda la imagen de la firma en R2 (`FIRMAS_BUCKET`).
   - Inserta en D1 con fecha/hora automática.
-- `GET /firmas/:asistencia_id` → Visualización segura de la firma en R2 (para auditoría).
+- `GET /firmas/:asistencia_id` → Visualización segura de la firma en R2 (para asistencias de asesoría o de eventos).
 
 - `GET /reportes/asistencias` → Consulta general con filtros: rango de fechas, materia, código o nombre de estudiante.
 - `GET /reportes/excel` → Descarga del consolidado en formato `.xlsx` con las 8 columnas requeridas y todas las firmas manuscritas incrustadas directamente en cada fila.

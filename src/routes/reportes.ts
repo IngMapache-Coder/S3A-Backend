@@ -1,12 +1,13 @@
 import { Hono } from 'hono';
 import { FirmaService } from '../services/firmaService.js';
+import { EventoService } from '../services/eventoService.js';
 import { authMiddleware, requireRole } from '../middlewares/auth.js';
 import type { Env, Variables } from '../types/env.js';
 
 const reportes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 reportes.use('*', authMiddleware);
-reportes.use('*', requireRole('DIRECTOR', 'SUPER_ADMIN'));
+reportes.use('*', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUPER_ADMIN'));
 
 reportes.get('/asistencias', async (c) => {
   try {
@@ -29,6 +30,31 @@ reportes.get('/asistencias', async (c) => {
     return c.json({ success: true, data, count: data.length });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Error al consultar asistencias';
+    return c.json({ success: false, error: msg }, 500);
+  }
+});
+
+reportes.get('/eventos', async (c) => {
+  try {
+    const q = c.req.query();
+    const desde = q['desde'];
+    const hasta = q['hasta'];
+    const eventoId = q['eventoId'] || q['evento_id'];
+    const codigoEstudiante = q['codigoEstudiante'] || q['codigo_estudiante'];
+    const nombreEstudiante = q['nombreEstudiante'] || q['nombre_estudiante'];
+
+    const service = new EventoService(c.env.DB);
+    const data = await service.consultarAsistencias({
+      desde: desde || undefined,
+      hasta: hasta || undefined,
+      eventoId: eventoId || undefined,
+      codigoEstudiante: codigoEstudiante || undefined,
+      nombreEstudiante: nombreEstudiante || undefined,
+    });
+
+    return c.json({ success: true, data, count: data.length });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Error al consultar asistencias de eventos';
     return c.json({ success: false, error: msg }, 500);
   }
 });

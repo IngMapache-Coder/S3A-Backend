@@ -45,3 +45,34 @@ CREATE INDEX IF NOT EXISTS idx_asistencias_sesion  ON asistencias(sesion_id);
 CREATE INDEX IF NOT EXISTS idx_asistencias_materia ON asistencias(materia_id);
 CREATE INDEX IF NOT EXISTS idx_asistencias_fecha   ON asistencias(fecha_hora);
 
+CREATE TABLE IF NOT EXISTS eventos (
+  id            TEXT PRIMARY KEY,
+  codigo        TEXT NOT NULL UNIQUE,
+  nombre        TEXT NOT NULL,
+  descripcion   TEXT,
+  lugar         TEXT,
+  facilitador   TEXT,
+  creada_por_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
+  estado        TEXT NOT NULL DEFAULT 'activa'
+                  CHECK(estado IN ('activa', 'cerrada')),
+  fecha_inicio  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_cierre  DATETIME,
+  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_eventos_codigo ON eventos(codigo);
+CREATE INDEX IF NOT EXISTS idx_eventos_estado ON eventos(estado);
+
+CREATE TABLE IF NOT EXISTS asistencias_eventos (
+  id                 TEXT PRIMARY KEY,
+  evento_id          TEXT NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
+  nombre_estudiante  TEXT NOT NULL,
+  codigo_estudiante  TEXT NOT NULL,
+  correo_estudiante  TEXT,
+  firma_url          TEXT NOT NULL,
+  fecha_hora         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_asistencias_eventos_evento ON asistencias_eventos(evento_id);
+CREATE INDEX IF NOT EXISTS idx_asistencias_eventos_fecha  ON asistencias_eventos(fecha_hora);
+
+

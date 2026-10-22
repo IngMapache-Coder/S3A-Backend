@@ -106,10 +106,17 @@ export class FirmaService {
   }
 
   async getFirma(asistenciaId: string): Promise<R2ObjectBody | null> {
-    const row = await this.db
+    let row = await this.db
       .prepare(`SELECT firma_url AS firmaUrl FROM asistencias WHERE id = ?`)
       .bind(asistenciaId)
       .first<{ firmaUrl: string }>();
+
+    if (!row) {
+      row = await this.db
+        .prepare(`SELECT firma_url AS firmaUrl FROM asistencias_eventos WHERE id = ?`)
+        .bind(asistenciaId)
+        .first<{ firmaUrl: string }>();
+    }
 
     if (!row) return null;
     const obj = await this.bucket.get(row.firmaUrl);

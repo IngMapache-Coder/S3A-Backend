@@ -71,6 +71,64 @@ export type CreateAsistenciaDTO = {
   firmaBase64: string;
 };
 
+export interface Evento {
+  id: string;
+  codigo: string;
+  nombre: string;
+  descripcion?: string | null | undefined;
+  lugar?: string | null | undefined;
+  facilitador?: string | null | undefined;
+  ponente?: string | null | undefined;
+  creadaPorId: string;
+  creadaPorNombre?: string | undefined;
+  estado: 'activa' | 'cerrada';
+  fechaInicio: string;
+  fechaCierre?: string | null | undefined;
+  totalAsistencias?: number | undefined;
+  qrUrl?: string | undefined;
+  createdAt?: string | undefined;
+  updatedAt?: string | undefined;
+}
+
+export type CreateEventoDTO = {
+  nombre: string;
+  descripcion?: string | undefined;
+  lugar?: string | undefined;
+  facilitador?: string | undefined;
+  ponente?: string | undefined;
+  codigo?: string | undefined;
+  creadaPorId: string;
+};
+
+export type UpdateEventoDTO = {
+  nombre?: string | undefined;
+  descripcion?: string | undefined;
+  lugar?: string | undefined;
+  facilitador?: string | undefined;
+  ponente?: string | undefined;
+  codigo?: string | undefined;
+};
+
+export interface AsistenciaEvento {
+  id: string;
+  eventoId: string;
+  eventoNombre?: string;
+  eventoCodigo?: string;
+  nombreEstudiante: string;
+  codigoEstudiante: string;
+  correoEstudiante?: string | null;
+  firmaUrl: string;
+  fechaHora: string;
+}
+
+export type CreateAsistenciaEventoDTO = {
+  codigoEvento: string;
+  nombreEstudiante: string;
+  codigoEstudiante: string;
+  correoEstudiante?: string | undefined;
+  firmaBase64: string;
+};
+
 export interface AuthUserPayload {
   id: string;
   nombre: string;
