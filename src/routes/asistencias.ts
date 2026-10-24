@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { FirmaService } from '../services/firmaService.js';
+import { PusherService } from '../services/pusherService.js';
 import type { Env, Variables } from '../types/env.js';
 
 const asistencias = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -33,6 +34,15 @@ asistencias.post('/', async (c) => {
       nombreEstudiante,
       codigoEstudiante,
       firmaBase64,
+    });
+
+    // Notificar en tiempo real a los tutores de la sala
+    const pusher = new PusherService(c.env);
+    await pusher.trigger('sala-asesoria', 'asistencia-registrada', {
+      sesionId: asistencia.sesionId,
+      asistenciaId: asistencia.id,
+      nombreEstudiante,
+      materiaNombre: asistencia.materiaNombre,
     });
 
     return c.json(

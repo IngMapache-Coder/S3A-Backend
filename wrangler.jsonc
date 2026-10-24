@@ -3,12 +3,19 @@
 	"name": "backend",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-09-26",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"observability": {
 		"enabled": true
 	},
 	"upload_source_maps": true,
 	"vars": {
-		"JWT_SECRET": "9gTBrQ13atPYaegprRXyxVpAOqoEMKQDRw2sFoS9kZVGWnyaj6_SYjykmh1UGdf9cMK_qkNjXZgMepjyC95jXg"
+		"JWT_SECRET": "9gTBrQ13atPYaegprRXyxVpAOqoEMKQDRw2sFoS9kZVGWnyaj6_SYjykmh1UGdf9cMK_qkNjXZgMepjyC95jXg",
+		"PUSHER_APP_ID": "2204867",
+		"PUSHER_KEY": "761567fdc43214859d5b",
+		"PUSHER_SECRET": "f0f7b7e19a4ae00db7fe",
+		"PUSHER_CLUSTER": "sa1"
 	},
 	"d1_databases": [
 		{

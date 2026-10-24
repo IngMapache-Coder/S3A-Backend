@@ -1,6 +1,7 @@
 import { Hono, type Context } from 'hono';
 import { SesionService } from '../services/sesionService.js';
 import { FirmaService } from '../services/firmaService.js';
+import { PusherService } from '../services/pusherService.js';
 import { authMiddleware, requireRole } from '../middlewares/auth.js';
 import type { Env, Variables } from '../types/env.js';
 
@@ -47,6 +48,10 @@ const abrirSesionHandler = async (c: Context<{ Bindings: Env; Variables: Variabl
     const service = new SesionService(c.env.DB);
     const { sesion, creada } = await service.abrir({ creadaPorId: user.id });
 
+    // Notificar en tiempo real a todos los tutores conectados
+    const pusher = new PusherService(c.env);
+    await pusher.trigger('sala-asesoria', 'sesion-abierta', { sesion, creadaPor: user.nombre });
+
     return c.json(
       {
         success: true,
@@ -89,6 +94,10 @@ sesiones.patch('/:id/cerrar', requireRole('AMIGO_ACADEMICO', 'DIRECTOR', 'SUPER_
     if (!sesion) {
       return c.json({ success: false, error: 'Sesión no encontrada o ya cerrada' }, 404);
     }
+
+    // Notificar en tiempo real a todos los tutores conectados
+    const pusher = new PusherService(c.env);
+    await pusher.trigger('sala-asesoria', 'sesion-cerrada', { id, sesion });
 
     return c.json({ success: true, data: sesion, message: 'Sesión cerrada. El QR ya no acepta nuevas firmas.' });
   } catch (error: unknown) {

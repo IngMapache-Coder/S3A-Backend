@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { EventoService } from '../services/eventoService.js';
+import { PusherService } from '../services/pusherService.js';
 import { authMiddleware, requireRole } from '../middlewares/auth.js';
 import type { Env, Variables } from '../types/env.js';
 
@@ -66,6 +67,14 @@ eventos.post('/asistencias', async (c) => {
       firmaBase64,
     });
 
+    // Notificar en tiempo real a la sala del evento
+    const pusher = new PusherService(c.env);
+    await pusher.trigger(`evento-${asistencia.eventoId}`, 'asistencia-evento-registrada', {
+      eventoId: asistencia.eventoId,
+      asistenciaId: asistencia.id,
+      nombreEstudiante,
+    });
+
     return c.json(
       {
         success: true,
@@ -126,6 +135,9 @@ eventos.post('/', async (c) => {
       creadaPorId: user.id,
     });
 
+    const pusher = new PusherService(c.env);
+    await pusher.trigger('eventos', 'evento-creado', { evento });
+
     return c.json({ success: true, data: evento, message: 'Evento creado exitosamente' }, 201);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Error al crear evento';
@@ -172,6 +184,10 @@ eventos.put('/:id', async (c) => {
       return c.json({ success: false, error: 'Evento no encontrado' }, 404);
     }
 
+    const pusher = new PusherService(c.env);
+    await pusher.trigger('eventos', 'evento-actualizado', { evento });
+    await pusher.trigger(`evento-${id}`, 'evento-actualizado', { evento });
+
     return c.json({ success: true, data: evento, message: 'Evento actualizado exitosamente' });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Error al actualizar evento';
@@ -188,6 +204,10 @@ eventos.patch('/:id/cerrar', async (c) => {
     if (!evento) {
       return c.json({ success: false, error: 'Evento no encontrado' }, 404);
     }
+
+    const pusher = new PusherService(c.env);
+    await pusher.trigger('eventos', 'evento-cerrado', { id, evento });
+    await pusher.trigger(`evento-${id}`, 'evento-cerrado', { id, evento });
 
     return c.json({
       success: true,
@@ -210,6 +230,10 @@ eventos.patch('/:id/reabrir', async (c) => {
       return c.json({ success: false, error: 'Evento no encontrado' }, 404);
     }
 
+    const pusher = new PusherService(c.env);
+    await pusher.trigger('eventos', 'evento-reabierto', { id, evento });
+    await pusher.trigger(`evento-${id}`, 'evento-reabierto', { id, evento });
+
     return c.json({
       success: true,
       data: evento,
@@ -230,6 +254,9 @@ eventos.delete('/:id', async (c) => {
     if (!ok) {
       return c.json({ success: false, error: 'Evento no encontrado o no se pudo eliminar' }, 404);
     }
+
+    const pusher = new PusherService(c.env);
+    await pusher.trigger('eventos', 'evento-eliminado', { id });
 
     return c.json({ success: true, message: 'Evento y sus asistencias eliminados correctamente' });
   } catch (error: unknown) {
